@@ -1059,6 +1059,117 @@
             align-items: center;
             justify-content: center;
         }
+        .comment-input {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    position: relative;
+}
+.comment-input input {
+    flex: 1;
+    padding: 10px 16px;
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    background: var(--bg);
+    transition: var(--transition);
+    font-size: 14px;
+}
+.comment-input input:focus {
+    border-color: var(--primary);
+    background: #fff;
+}
+.comment-input .emoji-btn {
+    padding: 10px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    color: var(--text-secondary);
+    transition: var(--transition);
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.comment-input .emoji-btn:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+    border-color: var(--primary);
+}
+.comment-input button#commentSubmit {
+    padding: 10px 24px;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 30px;
+    font-weight: 500;
+    transition: var(--transition);
+    flex-shrink: 0;
+    border: none;
+}
+.comment-input button#commentSubmit:hover {
+    background: var(--primary-dark);
+}
+// 图标选择器切换
+const emojiToggle = detailContent.querySelector('#emojiToggle');
+const emojiPicker = detailContent.querySelector('#emojiPicker');
+if (emojiToggle && emojiPicker) {
+    emojiToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        emojiPicker.classList.toggle('open');
+    });
+    // 点击面板外部关闭
+    document.addEventListener('click', () => {
+        emojiPicker.classList.remove('open');
+    });
+    // 点击图标插入到输入框
+    emojiPicker.querySelectorAll('.emoji-option').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const emoji = btn.dataset.emoji;
+            const input = detailContent.querySelector('#commentInput');
+            if (input) {
+                const start = input.selectionStart;
+                const end = input.selectionEnd;
+                const text = input.value;
+                input.value = text.substring(0, start) + emoji + text.substring(end);
+                input.focus();
+                input.selectionStart = input.selectionEnd = start + emoji.length;
+            }
+            emojiPicker.classList.remove('open');
+        });
+    });
+}
+/* 图标选择面板 */
+.emoji-picker {
+    display: none;
+    position: absolute;
+    bottom: 70px;
+    left: 0;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    z-index: 100;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+    max-width: 280px;
+}
+.emoji-picker.open {
+    display: grid;
+}
+.emoji-picker .emoji-option {
+    padding: 6px 8px;
+    border-radius: 8px;
+    font-size: 22px;
+    background: transparent;
+    transition: var(--transition);
+    cursor: pointer;
+    border: none;
+}
+.emoji-picker .emoji-option:hover {
+    background: var(--primary-light);
+    transform: scale(1.15);
+}
     </style>
 </head>
 <body>
