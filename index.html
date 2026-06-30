@@ -2062,14 +2062,6 @@
                     if (id) openDetail(id);
                 });
             });
-            // 排行榜渲染完成后，绑定点击事件
-    $$('.rank-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const id = parseInt(item.dataset.id, 10);
-            if (id) openDetail(id);  // ← 点击排行榜帖子 → 打开详情弹窗
-        });
-    });
-}
         }
 
         rankTabs.addEventListener('click', (e) => {
