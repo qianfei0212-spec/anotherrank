@@ -796,134 +796,169 @@ btnPublish.addEventListener('click', () => {
 //  PROFILE
 // ================================================================
 function renderProfile() {
+    // 1. 获取当前登录用户
     const user = getCurrentUser();
+    
+    // 2. 如果未登录，显示提示
     if (!user) {
         profileBox.innerHTML = `
             <div class="profile-empty">
                 <i class="fas fa-user-circle" style="font-size:48px;color:var(--text-secondary);display:block;margin-bottom:12px;"></i>
                 请先登录查看个人中心
                 <br /><br />
-                <button class="btn-login" style="background:var(--primary);color:#fff;padding:10px 32px;border-radius:30px;font-weight:500;" onclick="openAuthModal()">
+                <button class="btn-login" style="background:var(--primary);color:#fff;padding:10px 32px;border-radius:30px;font-weight:500;border:none;cursor:pointer;" onclick="openAuthModal()">
                     去登录
                 </button>
             </div>
         `;
         return;
     }
-    
-    // 获取用户头像，如果没有则使用默认
+
+    // 3. 准备头像显示内容 (如果有头像URL就显示图片，否则显示首字母)
     const avatarUrl = user.avatar || '';
     const avatarDisplay = avatarUrl ? 
-        `<img src="${avatarUrl}" alt="头像" style="width:72px;height:72px;border-radius:50%;object-fit:cover;" />` :
-        `<div class="big-avatar">${user.username.charAt(0).toUpperCase()}</div>`;
+        `<img src="${avatarUrl}" alt="头像" style="width:72px;height:72px;border-radius:50%;object-fit:cover;display:block;" />` :
+        `<div class="big-avatar" style="width:72px;height:72px;border-radius:50%;background:var(--primary-light);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;">${user.username.charAt(0).toUpperCase()}</div>`;
 
+    // 4. 获取该用户发布的帖子列表
     const userPosts = data.posts.filter(p => p.authorId === user.id);
     let postsHtml = '';
     if (userPosts.length === 0) {
-        postsHtml = `<div class="profile-empty">你还没有发布过帖子</div>`;
+        postsHtml = `<div class="profile-empty" style="padding:20px 0;">你还没有发布过帖子</div>`;
     } else {
         userPosts.forEach(p => {
             postsHtml += `
-                <div class="pp-item" data-id="${p.id}">
-                    <div class="pp-title-text">${escapeHtml(p.title)}</div>
-                    <div class="pp-meta">${formatTime(p.time)} · ${p.likes.length} 赞 · ${p.comments ? p.comments.length : 0} 评论</div>
+                <div class="pp-item" data-id="${p.id}" style="padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;">
+                    <div class="pp-title-text" style="font-weight:500;">${escapeHtml(p.title)}</div>
+                    <div class="pp-meta" style="font-size:13px;color:var(--text-secondary);">${formatTime(p.time)} · ${p.likes.length} 赞 · ${p.comments ? p.comments.length : 0} 评论</div>
                 </div>
             `;
         });
     }
 
-   // ===== 在 profileBox.innerHTML 中，头像部分使用这个 =====
-profileBox.innerHTML = `
-    <div class="profile-head">
-        <div class="avatar-wrapper" id="avatarWrapper">
-            ${avatarDisplay}
-            <div class="avatar-overlay" id="avatarOverlay">
-                <i class="fas fa-camera" style="font-size:24px;"></i>
-                <span style="display:block;font-size:12px;margin-top:4px;">更换头像</span>
+    // 5. 渲染个人中心的完整 HTML (关键：头像区域完整结构)
+    profileBox.innerHTML = `
+        <div class="profile-head" style="display:flex;align-items:center;gap:20px;margin-bottom:24px;flex-wrap:wrap;">
+            <!-- ===== 头像区域 START ===== -->
+            <div class="avatar-wrapper" id="avatarWrapper" style="position:relative;cursor:pointer;width:72px;height:72px;border-radius:50%;overflow:hidden;flex-shrink:0;">
+                ${avatarDisplay}
+                <!-- 悬停时显示的遮罩层 -->
+                <div class="avatar-overlay" id="avatarOverlay" style="position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,0.55);display:none;align-items:center;justify-content:center;flex-direction:column;color:#fff;pointer-events:none;">
+                    <i class="fas fa-camera" style="font-size:24px;margin-bottom:2px;"></i>
+                    <span style="font-size:12px;">更换头像</span>
+                </div>
+                <!-- 隐藏的文件输入框 -->
+                <input type="file" id="avatarInput" accept="image/*" style="display:none;" />
             </div>
-            <input type="file" id="avatarInput" accept="image/*" style="display:none;" />
+            <!-- ===== 头像区域 END ===== -->
+            
+            <div class="p-info">
+                <div class="p-name" style="font-size:20px;font-weight:700;">${user.username}</div>
+                <div class="p-joined" style="font-size:14px;color:var(--text-secondary);">加入于 ${formatTime(user.joined)}</div>
+                <button class="btn-change-avatar" id="changeAvatarBtn" style="margin-top:6px;padding:4px 16px;background:var(--primary-light);color:var(--primary);border-radius:20px;font-size:13px;font-weight:500;border:none;cursor:pointer;transition:all 0.2s;">
+                    <i class="fas fa-camera"></i> 更换头像
+                </button>
+            </div>
         </div>
-        <div class="p-info">
-            <div class="p-name">${user.username}</div>
-            <div class="p-joined">加入于 ${formatTime(user.joined)}</div>
-            <button class="btn-change-avatar" id="changeAvatarBtn">
-                <i class="fas fa-camera"></i> 更换头像
-            </button>
+        <div class="profile-posts">
+            <div class="pp-title" style="font-weight:600;font-size:16px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:8px;">我的帖子 (${userPosts.length})</div>
+            ${postsHtml}
         </div>
-    </div>
-    <div class="profile-posts">
-        <div class="pp-title">我的帖子 (${userPosts.length})</div>
-        ${postsHtml}
-    </div>
-`;
+    `;
 
-// ===== 头像悬停效果 - 使用更可靠的方式 =====
-const avatarWrapper = document.getElementById('avatarWrapper');
-const avatarOverlay = document.getElementById('avatarOverlay');
+    // ================================================================
+    // 6. 绑定头像交互事件 (这是让相机图标显示和上传生效的关键)
+    // ================================================================
+    
+    // 获取元素
+    const avatarWrapper = document.getElementById('avatarWrapper');
+    const avatarOverlay = document.getElementById('avatarOverlay');
+    const changeAvatarBtn = document.getElementById('changeAvatarBtn');
+    const avatarInput = document.getElementById('avatarInput');
 
-if (avatarWrapper && avatarOverlay) {
-    // 使用 mouseenter/mouseleave 事件
-    avatarWrapper.addEventListener('mouseenter', function() {
-        avatarOverlay.style.display = 'flex';
-    });
-    avatarWrapper.addEventListener('mouseleave', function() {
+    // 确保 overlay 默认是隐藏的
+    if (avatarOverlay) {
         avatarOverlay.style.display = 'none';
-    });
-    
-    // 如果头像已经有图片，也要显示 overlay
-    // 默认隐藏，只在 hover 时显示
-    avatarOverlay.style.display = 'none';
-}
+    }
 
-// 更换头像按钮
-const changeAvatarBtn = document.getElementById('changeAvatarBtn');
-const avatarInput = document.getElementById('avatarInput');
+    // 鼠标悬停显示/隐藏遮罩
+    if (avatarWrapper && avatarOverlay) {
+        avatarWrapper.addEventListener('mouseenter', function() {
+            avatarOverlay.style.display = 'flex';
+        });
+        avatarWrapper.addEventListener('mouseleave', function() {
+            avatarOverlay.style.display = 'none';
+        });
+    }
 
-if (changeAvatarBtn && avatarInput) {
-    changeAvatarBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        avatarInput.click();
-    });
-    
-    if (avatarWrapper) {
+    // 点击头像 或 点击「更换头像」按钮，都触发文件选择
+    if (avatarWrapper && avatarInput) {
         avatarWrapper.addEventListener('click', function(e) {
+            // 如果点的是按钮内部，不重复触发
             if (e.target.closest('.btn-change-avatar')) return;
             avatarInput.click();
         });
     }
-    
-    avatarInput.addEventListener('change', function(e) {
-        const file = this.files[0];
-        if (!file) return;
-        
-        if (file.size > 2 * 1024 * 1024) {
-            showToast('图片大小不能超过 2MB', 'error');
-            this.value = '';
-            return;
-        }
-        
-        if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
-            showToast('仅支持 JPG、PNG、GIF、WEBP 格式', 'error');
-            this.value = '';
-            return;
-        }
+    if (changeAvatarBtn && avatarInput) {
+        changeAvatarBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            avatarInput.click();
+        });
+    }
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const base64 = e.target.result;
-            const user = getCurrentUser();
-            if (user) {
-                user.avatar = base64;
-                saveData();
-                renderProfile();
-                renderNav();
-                showToast('头像更新成功！', 'success');
+    // 文件选择后的处理 (上传头像)
+    if (avatarInput) {
+        avatarInput.addEventListener('change', function(e) {
+            const file = this.files[0];
+            if (!file) return;
+
+            // 校验文件大小 (2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                showToast('图片大小不能超过 2MB', 'error');
+                this.value = '';
+                return;
             }
-        };
-        reader.onerror = function() {
-            showToast('读取图片失败，请重试', 'error');
-        };
-        reader.readAsDataURL(file);
+
+            // 校验文件类型
+            if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
+                showToast('仅支持 JPG、PNG、GIF、WEBP 格式', 'error');
+                this.value = '';
+                return;
+            }
+
+            // 读取文件并转为 Base64
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64 = e.target.result;
+                const currentUser = getCurrentUser();
+                if (currentUser) {
+                    // 保存头像到用户数据
+                    currentUser.avatar = base64;
+                    saveData();
+                    // 刷新个人中心和导航栏
+                    renderProfile();
+                    renderNav();
+                    showToast('头像更新成功！ 🎉', 'success');
+                }
+            };
+            reader.onerror = function() {
+                showToast('读取图片失败，请重试', 'error');
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // 绑定帖子点击事件 (点击帖子打开详情)
+    document.querySelectorAll('.pp-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const id = parseInt(this.dataset.id, 10);
+            if (id) {
+                // 这里可以调用打开帖子详情的函数，如果没有可以先用 alert 代替
+                showToast('点击了帖子 ID: ' + id, 'info');
+                // 如果你有 openDetail 函数，可以取消注释下面的行
+                // openDetail(id);
+            }
+        });
     });
 }
 
