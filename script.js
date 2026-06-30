@@ -832,116 +832,98 @@ function renderProfile() {
         });
     }
 
-    // ===== 关键：这里包含了更换头像的按钮 =====
-    profileBox.innerHTML = `
-        <div class="profile-head">
-            <div class="avatar-wrapper" style="position:relative;cursor:pointer;flex-shrink:0;" id="avatarWrapper">
-                ${avatarDisplay}
-                <div class="avatar-overlay" style="position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,0.4);display:none;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:500;">
-                    <i class="fas fa-camera" style="font-size:20px;"></i>
-                </div>
-                <input type="file" id="avatarInput" accept="image/*" style="display:none;" />
+   // ===== 在 profileBox.innerHTML 中，头像部分使用这个 =====
+profileBox.innerHTML = `
+    <div class="profile-head">
+        <div class="avatar-wrapper" id="avatarWrapper">
+            ${avatarDisplay}
+            <div class="avatar-overlay" id="avatarOverlay">
+                <i class="fas fa-camera" style="font-size:24px;"></i>
+                <span style="display:block;font-size:12px;margin-top:4px;">更换头像</span>
             </div>
-            <div class="p-info">
-                <div class="p-name">${user.username}</div>
-                <div class="p-joined">加入于 ${formatTime(user.joined)}</div>
-                <button class="btn-change-avatar" id="changeAvatarBtn" style="margin-top:6px;padding:4px 16px;background:var(--primary-light);color:var(--primary);border-radius:20px;font-size:13px;font-weight:500;transition:var(--transition);border:none;cursor:pointer;">
-                    <i class="fas fa-camera"></i> 更换头像
-                </button>
-            </div>
+            <input type="file" id="avatarInput" accept="image/*" style="display:none;" />
         </div>
-        <div class="profile-posts">
-            <div class="pp-title">我的帖子 (${userPosts.length})</div>
-            ${postsHtml}
+        <div class="p-info">
+            <div class="p-name">${user.username}</div>
+            <div class="p-joined">加入于 ${formatTime(user.joined)}</div>
+            <button class="btn-change-avatar" id="changeAvatarBtn">
+                <i class="fas fa-camera"></i> 更换头像
+            </button>
         </div>
-    `;
+    </div>
+    <div class="profile-posts">
+        <div class="pp-title">我的帖子 (${userPosts.length})</div>
+        ${postsHtml}
+    </div>
+`;
 
-    // ===== 关键：这里绑定了点击事件 =====
-    // 头像悬停效果
-    const avatarWrapper = document.getElementById('avatarWrapper');
-    const avatarOverlay = avatarWrapper?.querySelector('.avatar-overlay');
-    if (avatarWrapper && avatarOverlay) {
-        avatarWrapper.addEventListener('mouseenter', () => {
-            avatarOverlay.style.display = 'flex';
-        });
-        avatarWrapper.addEventListener('mouseleave', () => {
-            avatarOverlay.style.display = 'none';
-        });
-    }
+// ===== 头像悬停效果 - 使用更可靠的方式 =====
+const avatarWrapper = document.getElementById('avatarWrapper');
+const avatarOverlay = document.getElementById('avatarOverlay');
 
-    // 更换头像按钮 - 这是核心功能
-    const changeAvatarBtn = document.getElementById('changeAvatarBtn');
-    const avatarInput = document.getElementById('avatarInput');
+if (avatarWrapper && avatarOverlay) {
+    // 使用 mouseenter/mouseleave 事件
+    avatarWrapper.addEventListener('mouseenter', function() {
+        avatarOverlay.style.display = 'flex';
+    });
+    avatarWrapper.addEventListener('mouseleave', function() {
+        avatarOverlay.style.display = 'none';
+    });
     
-    console.log('changeAvatarBtn:', changeAvatarBtn); // 调试：检查按钮是否存在
-    console.log('avatarInput:', avatarInput); // 调试：检查 input 是否存在
+    // 如果头像已经有图片，也要显示 overlay
+    // 默认隐藏，只在 hover 时显示
+    avatarOverlay.style.display = 'none';
+}
+
+// 更换头像按钮
+const changeAvatarBtn = document.getElementById('changeAvatarBtn');
+const avatarInput = document.getElementById('avatarInput');
+
+if (changeAvatarBtn && avatarInput) {
+    changeAvatarBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        avatarInput.click();
+    });
     
-    if (changeAvatarBtn && avatarInput) {
-        // 点击按钮触发文件选择
-        changeAvatarBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            console.log('点击了更换头像按钮'); // 调试
+    if (avatarWrapper) {
+        avatarWrapper.addEventListener('click', function(e) {
+            if (e.target.closest('.btn-change-avatar')) return;
             avatarInput.click();
         });
+    }
+    
+    avatarInput.addEventListener('change', function(e) {
+        const file = this.files[0];
+        if (!file) return;
         
-        // 点击头像区域也触发文件选择
-        if (avatarWrapper) {
-            avatarWrapper.addEventListener('click', function(e) {
-                // 如果点击的是按钮，不重复触发
-                if (e.target.closest('.btn-change-avatar')) return;
-                console.log('点击了头像区域'); // 调试
-                avatarInput.click();
-            });
+        if (file.size > 2 * 1024 * 1024) {
+            showToast('图片大小不能超过 2MB', 'error');
+            this.value = '';
+            return;
         }
         
-        // 文件选择后的处理
-        avatarInput.addEventListener('change', function(e) {
-            const file = this.files[0];
-            if (!file) return;
-            
-            console.log('选择了文件:', file.name); // 调试
-            
-            // 验证文件大小（限制 2MB）
-            if (file.size > 2 * 1024 * 1024) {
-                showToast('图片大小不能超过 2MB', 'error');
-                this.value = '';
-                return;
-            }
-            
-            // 验证文件类型
-            if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
-                showToast('仅支持 JPG、PNG、GIF、WEBP 格式', 'error');
-                this.value = '';
-                return;
-            }
+        if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
+            showToast('仅支持 JPG、PNG、GIF、WEBP 格式', 'error');
+            this.value = '';
+            return;
+        }
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const base64 = e.target.result;
-                const user = getCurrentUser();
-                if (user) {
-                    user.avatar = base64;
-                    saveData();
-                    renderProfile();
-                    renderNav();
-                    showToast('头像更新成功！', 'success');
-                }
-            };
-            reader.onerror = function() {
-                showToast('读取图片失败，请重试', 'error');
-            };
-            reader.readAsDataURL(file);
-        });
-    } else {
-        console.error('找不到 changeAvatarBtn 或 avatarInput 元素');
-    }
-
-    // 帖子点击事件
-    $$('.pp-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const id = parseInt(item.dataset.id, 10);
-            if (id) openDetail(id);
-        });
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const base64 = e.target.result;
+            const user = getCurrentUser();
+            if (user) {
+                user.avatar = base64;
+                saveData();
+                renderProfile();
+                renderNav();
+                showToast('头像更新成功！', 'success');
+            }
+        };
+        reader.onerror = function() {
+            showToast('读取图片失败，请重试', 'error');
+        };
+        reader.readAsDataURL(file);
     });
 }
 
