@@ -194,9 +194,13 @@ function requireAuth() {
 function renderNav() {
     const user = getCurrentUser();
     if (user) {
-        const initial = user.username.charAt(0).toUpperCase();
+        // 使用用户头像，如果没有则使用首字母
+        const avatarHtml = user.avatar ? 
+            `<img src="${user.avatar}" alt="头像" style="width:34px;height:34px;border-radius:50%;object-fit:cover;" />` :
+            `<span class="avatar-sm">${user.username.charAt(0).toUpperCase()}</span>`;
+        
         userArea.innerHTML = `
-            <span class="avatar-sm">${initial}</span>
+            ${avatarHtml}
             <span class="username">${user.username}</span>
             <button class="btn-logout" id="btnLogout"><i class="fas fa-sign-out-alt"></i> 退出</button>
         `;
@@ -806,6 +810,13 @@ function renderProfile() {
         `;
         return;
     }
+    
+    // 获取用户头像，如果没有则使用默认
+    const avatarUrl = user.avatar || '';
+    const avatarDisplay = avatarUrl ? 
+        `<img src="${avatarUrl}" alt="头像" style="width:72px;height:72px;border-radius:50%;object-fit:cover;" />` :
+        `<div class="big-avatar">${user.username.charAt(0).toUpperCase()}</div>`;
+
     const userPosts = data.posts.filter(p => p.authorId === user.id);
     let postsHtml = '';
     if (userPosts.length === 0) {
@@ -823,10 +834,19 @@ function renderProfile() {
 
     profileBox.innerHTML = `
         <div class="profile-head">
-            <div class="big-avatar">${user.username.charAt(0).toUpperCase()}</div>
+            <div class="avatar-wrapper" style="position:relative;cursor:pointer;" id="avatarWrapper">
+                ${avatarDisplay}
+                <div class="avatar-overlay" style="position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,0.4);display:none;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:500;">
+                    <i class="fas fa-camera" style="font-size:20px;"></i>
+                </div>
+                <input type="file" id="avatarInput" accept="image/*" style="display:none;" />
+            </div>
             <div class="p-info">
                 <div class="p-name">${user.username}</div>
                 <div class="p-joined">加入于 ${formatTime(user.joined)}</div>
+                <button class="btn-change-avatar" id="changeAvatarBtn" style="margin-top:6px;padding:4px 16px;background:var(--primary-light);color:var(--primary);border-radius:20px;font-size:13px;font-weight:500;transition:var(--transition);">
+                    <i class="fas fa-camera"></i> 更换头像
+                </button>
             </div>
         </div>
         <div class="profile-posts">
@@ -834,6 +854,66 @@ function renderProfile() {
             ${postsHtml}
         </div>
     `;
+
+    // 头像悬停效果
+    const avatarWrapper = document.getElementById('avatarWrapper');
+    const avatarOverlay = avatarWrapper?.querySelector('.avatar-overlay');
+    if (avatarWrapper && avatarOverlay) {
+        avatarWrapper.addEventListener('mouseenter', () => {
+            avatarOverlay.style.display = 'flex';
+        });
+        avatarWrapper.addEventListener('mouseleave', () => {
+            avatarOverlay.style.display = 'none';
+        });
+    }
+
+    // 更换头像按钮
+    const changeAvatarBtn = document.getElementById('changeAvatarBtn');
+    const avatarInput = document.getElementById('avatarInput');
+    if (changeAvatarBtn && avatarInput) {
+        changeAvatarBtn.addEventListener('click', () => {
+            avatarInput.click();
+        });
+        avatarWrapper?.addEventListener('click', () => {
+            avatarInput.click();
+        });
+        avatarInput.addEventListener('change', function(e) {
+            const file = this.files[0];
+            if (!file) return;
+            
+            // 验证文件大小（限制 2MB）
+            if (file.size > 2 * 1024 * 1024) {
+                showToast('图片大小不能超过 2MB', 'error');
+                this.value = '';
+                return;
+            }
+            
+            // 验证文件类型
+            if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
+                showToast('仅支持 JPG、PNG、GIF、WEBP 格式', 'error');
+                this.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64 = e.target.result;
+                // 更新用户头像
+                const user = getCurrentUser();
+                if (user) {
+                    user.avatar = base64;
+                    saveData();
+                    renderProfile();
+                    renderNav(); // 更新导航栏头像
+                    showToast('头像更新成功！', 'success');
+                }
+            };
+            reader.onerror = function() {
+                showToast('读取图片失败，请重试', 'error');
+            };
+            reader.readAsDataURL(file);
+        });
+    }
 
     $$('.pp-item').forEach(item => {
         item.addEventListener('click', () => {
