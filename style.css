@@ -1102,3 +1102,39 @@ img {
     align-items: center;
     justify-content: center;
 }
+/* ===== 头像相关 ===== */
+.avatar-wrapper {
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.avatar-wrapper .avatar-overlay {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.4);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 20px;
+    transition: var(--transition);
+}
+.avatar-wrapper:hover .avatar-overlay {
+    display: flex;
+}
+.btn-change-avatar {
+    padding: 4px 16px;
+    background: var(--primary-light);
+    color: var(--primary);
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    transition: var(--transition);
+    border: none;
+    cursor: pointer;
+}
+.btn-change-avatar:hover {
+    background: var(--primary);
+    color: #fff;
+}
