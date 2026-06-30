@@ -1248,42 +1248,12 @@
         }
 
         /* ===== Emoji 面板 ===== */
-.emoji-picker {
-    display: none;
-    position: absolute;
-    bottom: 70px;
-    left: 0;
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    padding: 12px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-    z-index: 100;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 6px;
-    max-width: 280px;
-}
-.emoji-picker.open {
-    display: grid;
-}
-.emoji-picker .emoji-option {
-    padding: 6px 8px;
-    border-radius: 8px;
-    font-size: 22px;
-    background: transparent;
-    transition: all 0.2s;
-    cursor: pointer;
-    border: none;
-}
-.emoji-picker .emoji-option:hover {
-    background: #e8eeff;
-    transform: scale(1.15);
-}
 .comment-input {
     display: flex;
     gap: 10px;
     margin-bottom: 16px;
     position: relative;
+    align-items: center;
 }
 .comment-input input {
     flex: 1;
@@ -1292,6 +1262,13 @@
     border-radius: 30px;
     background: #F0F2F5;
     font-size: 14px;
+    outline: none;
+    transition: all 0.2s;
+}
+.comment-input input:focus {
+    border-color: #4F7CFF;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(79, 124, 255, 0.12);
 }
 .comment-input .emoji-btn {
     padding: 10px 14px;
@@ -1304,10 +1281,12 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    transition: all 0.2s;
 }
 .comment-input .emoji-btn:hover {
     background: #e8eeff;
     color: #4F7CFF;
+    border-color: #4F7CFF;
 }
 .comment-input button#commentSubmit {
     padding: 10px 24px;
@@ -1318,9 +1297,43 @@
     border: none;
     cursor: pointer;
     flex-shrink: 0;
+    transition: all 0.2s;
 }
 .comment-input button#commentSubmit:hover {
     background: #3a5fd9;
+}
+
+.emoji-picker {
+    display: none;
+    position: absolute;
+    bottom: 70px;
+    left: 0;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    z-index: 100;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+    max-width: 280px;
+}
+.emoji-picker.open {
+    display: grid !important;
+}
+.emoji-picker .emoji-option {
+    padding: 6px 8px;
+    border-radius: 8px;
+    font-size: 22px;
+    background: transparent;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: none;
+    text-align: center;
+}
+.emoji-picker .emoji-option:hover {
+    background: #e8eeff;
+    transform: scale(1.2);
 }
     </style>
 </head>
@@ -2144,41 +2157,157 @@
                 commentsHtml = `<div class="comment-empty">暂无评论，来说点什么吧</div>`;
             }
 
-            detailContent.innerHTML = `
-                <div class="detail-header">
-                    <div class="avatar">${authorAvatar ? `<img src="${authorAvatar}" />` : post.authorName.charAt(0).toUpperCase()}</div>
-                    <div class="info">
-                        <div class="name">${post.authorName}</div>
-                        <div class="time">${formatTime(post.time)} · ${post.views || 0} 次浏览</div>
-                    </div>
+                    // ===== 评论区域（包含 Emoji 选择器） =====
+        detailContent.innerHTML = `
+            <div class="detail-header">
+                <div class="avatar">${authorAvatar ? `<img src="${authorAvatar}" />` : post.authorName.charAt(0).toUpperCase()}</div>
+                <div class="info">
+                    <div class="name">${post.authorName}</div>
+                    <div class="time">${formatTime(post.time)} · ${post.views || 0} 次浏览</div>
                 </div>
-                <div class="detail-title">${escapeHtml(post.title)}</div>
-                <div class="detail-body">${escapeHtml(post.content)}</div>
-                ${mediaHtml}
-                <div class="detail-meta">
-                    <button class="action-btn like-btn ${liked ? 'liked' : ''}" data-id="${post.id}">
-                        <i class="${liked ? 'fas' : 'far'} fa-heart"></i>
-                        <span class="count">${post.likes.length}</span>
+            </div>
+            <div class="detail-title">${escapeHtml(post.title)}</div>
+            <div class="detail-body">${escapeHtml(post.content)}</div>
+            ${mediaHtml}
+            <div class="detail-meta">
+                <button class="action-btn like-btn ${liked ? 'liked' : ''}" data-id="${post.id}">
+                    <i class="${liked ? 'fas' : 'far'} fa-heart"></i>
+                    <span class="count">${post.likes.length}</span>
+                </button>
+                <button class="action-btn comment-btn" data-id="${post.id}">
+                    <i class="far fa-comment"></i>
+                    <span class="count">${commentCount}</span>
+                </button>
+                <button class="action-btn share-btn" data-id="${post.id}">
+                    <i class="fas fa-share-alt"></i>
+                    <span class="count">${post.shares || 0}</span>
+                </button>
+                ${price > 0 ? `<span class="price-tag"><i class="fas fa-coins"></i> 付费 ¥${price.toFixed(2)}</span>` : ''}
+            </div>
+            <div class="comments-section">
+                <div class="comment-title"><i class="far fa-comment-dots"></i> 评论 (${commentCount})</div>
+                <div class="comment-input" style="display:flex;gap:10px;margin-bottom:16px;position:relative;align-items:center;">
+                    <input type="text" id="commentInput" placeholder="写下你的评论..." style="flex:1;padding:10px 16px;border:1px solid #e5e7eb;border-radius:30px;background:#F0F2F5;font-size:14px;outline:none;" />
+                    <button class="emoji-btn" id="emojiToggle" title="选择表情" style="padding:10px 14px;background:#F0F2F5;border:1px solid #e5e7eb;border-radius:30px;color:#6b7280;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;">
+                        <i class="far fa-smile"></i>
                     </button>
-                    <button class="action-btn comment-btn" data-id="${post.id}">
-                        <i class="far fa-comment"></i>
-                        <span class="count">${commentCount}</span>
-                    </button>
-                    <button class="action-btn share-btn" data-id="${post.id}">
-                        <i class="fas fa-share-alt"></i>
-                        <span class="count">${post.shares || 0}</span>
-                    </button>
-                    ${price > 0 ? `<span class="price-tag"><i class="fas fa-coins"></i> 付费 ¥${price.toFixed(2)}</span>` : ''}
+                    <button id="commentSubmit" style="padding:10px 24px;background:#4F7CFF;color:#fff;border-radius:30px;font-weight:500;border:none;cursor:pointer;flex-shrink:0;transition:all 0.2s;">发送</button>
                 </div>
-                <div class="comments-section">
-    <div class="comment-title"><i class="far fa-comment-dots"></i> 评论 (${commentCount})</div>
-    <div class="comment-input" style="display:flex;gap:10px;margin-bottom:16px;position:relative;">
-        <input type="text" id="commentInput" placeholder="写下你的评论..." style="flex:1;padding:10px 16px;border:1px solid #e5e7eb;border-radius:30px;background:#F0F2F5;font-size:14px;" />
-        <button class="emoji-btn" id="emojiToggle" title="选择表情" style="padding:10px 14px;background:#F0F2F5;border:1px solid #e5e7eb;border-radius:30px;color:#6b7280;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
-            <i class="far fa-smile"></i>
-        </button>
-        <button id="commentSubmit" style="padding:10px 24px;background:#4F7CFF;color:#fff;border-radius:30px;font-weight:500;border:none;cursor:pointer;">发送</button>
-    </div>
+                <!-- Emoji 选择面板 -->
+                <div class="emoji-picker" id="emojiPicker" style="display:none;position:absolute;bottom:70px;left:0;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:12px;box-shadow:0 8px 30px rgba(0,0,0,0.15);z-index:100;grid-template-columns:repeat(6,1fr);gap:6px;max-width:280px;">
+                    <button class="emoji-option" data-emoji="😊" style="padding:6px 8px;border-radius:8px;font-size:22px;background:transparent;border:none;cursor:pointer;transition:all 0.2s;">😊</button>
+                    <button class="emoji-option" data-emoji="😂" style="padding:6px 8px;border-radius:8px;font-size:22px;background:transparent;border:none;cursor:pointer;transition:all 0.2s;">😂</button>
+                    <button class="emoji-option" data-emoji="❤️" style="padding:6px 8px;border-radius:8px;font-size:22px;background:transparent;border:none;cursor:pointer;transition:all 0.2s;">❤️</button>
+                    <button class="emoji-option" data-emoji="👍" style="padding:6px 8px;border-radius:8px;font-size:22px;background:transparent;border:none;cursor:pointer;transition:all 0.2s;">👍</button>
+                    <button class="emoji-option" data-emoji="🔥" style="padding:6px 8px;border-radius:8px;font-size:22px;background:transparent;border:none;cursor:pointer;transition:all 0.2s;">🔥</button>
+                    <button class="emoji-option" data-emoji="🎉" style="padding:6px 8px;border-radius:8px;font-size:22px;background:transparent;border:none;cursor:pointer;transition:all 0.2s;">🎉</button>
+                    <button class="emoji-option" data-emoji="💡" style="padding:6px 8px;border-radius:8px;font-size:22px;background:transparent;border:none;cursor:pointer;transition:all 0.2s;">💡</button>
+                    <button class="emoji-option" data-emoji="🙌" style="padding:6px 8px;border-radius:8px;font-size:22px;background:transparent;border:none;cursor:pointer;transition:all 0.2s;">🙌</button>
+                    <button class="emoji-option" data-emoji="✨" style="padding:6px 8px;border-radius:8px;font-size:22px;background:transparent;border:none;cursor:pointer;transition:all 0.2s;">✨</button>
+                    <button class="emoji-option" data-emoji="💪" style="padding:6px 8px;border-radius:8px;font-size:22px;background:transparent;border:none;cursor:pointer;transition:all 0.2s;">💪</button>
+                    <button class="emoji-option" data-emoji="🤔" style="padding:6px 8px;border-radius:8px;font-size:22px;background:transparent;border:none;cursor:pointer;transition:all 0.2s;">🤔</button>
+                    <button class="emoji-option" data-emoji="👏" style="padding:6px 8px;border-radius:8px;font-size:22px;background:transparent;border:none;cursor:pointer;transition:all 0.2s;">👏</button>
+                </div>
+                <div id="commentList">${commentsHtml}</div>
+            </div>
+        `;
+
+        detailModal.classList.add('open');
+
+        // ===== 点赞事件 =====
+        const likeBtn = detailContent.querySelector('.like-btn');
+        if (likeBtn) {
+            likeBtn.addEventListener('click', () => {
+                const id = parseInt(likeBtn.dataset.id, 10);
+                if (id) toggleLike(id);
+            });
+        }
+
+        // ===== 分享事件 =====
+        const shareBtn = detailContent.querySelector('.share-btn');
+        if (shareBtn) {
+            shareBtn.addEventListener('click', () => {
+                const id = parseInt(shareBtn.dataset.id, 10);
+                if (id) openShare(id);
+            });
+        }
+
+        // ===== 评论提交事件 =====
+        const commentInput = detailContent.querySelector('#commentInput');
+        const commentSubmit = detailContent.querySelector('#commentSubmit');
+        if (commentSubmit && commentInput) {
+            const submitComment = () => {
+                const text = commentInput.value.trim();
+                if (!text) { showToast('请输入评论内容', 'error'); return; }
+                const user = requireAuth();
+                if (!user) return;
+                const post = data.posts.find(p => p.id === postId);
+                if (!post) return;
+                if (!post.comments) post.comments = [];
+                post.comments.push({
+                    id: 'c' + Date.now() + Math.random().toString(36).slice(2, 6),
+                    authorId: user.id,
+                    authorName: user.username,
+                    content: text,
+                    time: Date.now(),
+                });
+                saveData();
+                commentInput.value = '';
+                showToast('评论成功！', 'success');
+                openDetail(postId);
+                renderFeed();
+                renderRank();
+                renderChampions();
+            };
+            commentSubmit.addEventListener('click', submitComment);
+            commentInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') submitComment();
+            });
+        }
+
+        // ================================================================
+        // ===== Emoji 选择器事件（关键修复） =====
+        // ================================================================
+        const emojiToggle = detailContent.querySelector('#emojiToggle');
+        const emojiPicker = detailContent.querySelector('#emojiPicker');
+        
+        if (emojiToggle && emojiPicker) {
+            // 点击笑脸按钮切换面板
+            emojiToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (emojiPicker.style.display === 'grid') {
+                    emojiPicker.style.display = 'none';
+                } else {
+                    emojiPicker.style.display = 'grid';
+                }
+            });
+            
+            // 点击面板上的 Emoji 插入到输入框
+            emojiPicker.querySelectorAll('.emoji-option').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const emoji = this.dataset.emoji;
+                    const input = detailContent.querySelector('#commentInput');
+                    if (input) {
+                        const start = input.selectionStart;
+                        const end = input.selectionEnd;
+                        const text = input.value;
+                        input.value = text.substring(0, start) + emoji + text.substring(end);
+                        input.focus();
+                        input.selectionStart = input.selectionEnd = start + emoji.length;
+                    }
+                    // 选择后关闭面板
+                    emojiPicker.style.display = 'none';
+                });
+            });
+            
+            // 点击页面其他地方关闭面板
+            document.addEventListener('click', function() {
+                if (emojiPicker) {
+                    emojiPicker.style.display = 'none';
+                }
+            });
+        }
     <!-- Emoji 选择面板 -->
     <div class="emoji-picker" id="emojiPicker" style="display:none;position:absolute;bottom:70px;left:0;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px;box-shadow:0 8px 30px rgba(0,0,0,0.15);z-index:100;grid-template-columns:repeat(6,1fr);gap:6px;max-width:280px;">
         <button class="emoji-option" data-emoji="😊" style="padding:6px 8px;border-radius:8px;font-size:22px;background:transparent;border:none;cursor:pointer;">😊</button>
