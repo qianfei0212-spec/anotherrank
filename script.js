@@ -1,16 +1,11 @@
 // ================================================================
-//  DATA LAYER
+// DATA LAYER
 // ================================================================
 const STORAGE_KEY = 'quCommunityData';
 let data = loadData();
 
 function getDefaultData() {
-    return {
-        users: [],
-        posts: [],
-        nextUserId: 1,
-        nextPostId: 1,
-    };
+    return { users: [], posts: [], nextUserId: 1, nextPostId: 1 };
 }
 
 function loadData() {
@@ -18,15 +13,13 @@ function loadData() {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
             const parsed = JSON.parse(raw);
-            if (parsed && typeof parsed === 'object') {
-                const def = getDefaultData();
-                for (const k in def) {
-                    if (!(k in parsed)) parsed[k] = def[k];
-                }
-                return parsed;
+            const def = getDefaultData();
+            for (const k in def) {
+                if (!(k in parsed)) parsed[k] = def[k];
             }
+            return parsed;
         }
-    } catch (_) { /* ignore */ }
+    } catch (_) {}
     return getDefaultData();
 }
 
@@ -35,104 +28,91 @@ function saveData() {
 }
 
 // ================================================================
-//  INIT SAMPLE DATA (if empty)
+// SAMPLE DATA
 // ================================================================
 function initSampleData() {
     if (data.users.length > 0) return;
     const now = Date.now();
-    const users = [
+    data.users = [
         { id: 1, username: '星辰', password: '123456', avatar: '', joined: now - 86400000 * 30 },
         { id: 2, username: '月光', password: '123456', avatar: '', joined: now - 86400000 * 20 },
         { id: 3, username: '晚风', password: '123456', avatar: '', joined: now - 86400000 * 10 },
         { id: 4, username: '晨曦', password: '123456', avatar: '', joined: now - 86400000 * 5 },
     ];
-    data.users = users;
     data.nextUserId = 5;
-
-    const posts = [
-        { id: 1, title: '分享我最近的摄影作品', content: '周末去了郊外，拍到了绝美的日落。金色的阳光洒在田野上，一切都那么宁静美好。分享给大家，希望你们也能感受到这份治愈。', authorId: 1,
-            authorName: '星辰', time: now - 3600000 * 2, likes: [2, 3], comments: [{ id: 'c1', authorId: 2,
-                authorName: '月光', content: '太美了！求地点！', time: now - 3600000 * 1.5 }, { id: 'c2',
-                authorId: 3, authorName: '晚风', content: '光影处理得太棒了', time: now - 3600000 * 1.2 }],
-            views: 45, shares: 3, price: 0 },
-        { id: 2, title: 'AI 时代下我们该如何自处', content: '最近 ChatGPT 大火，很多人担心被取代。我的观点是：AI 是工具，不是对手。学会使用工具的人，永远不会被工具淘汰。大家怎么看？', authorId: 2,
-            authorName: '月光', time: now - 3600000 * 5, likes: [1, 3, 4], comments: [{ id: 'c3',
-                authorId: 1, authorName: '星辰', content: '说得对，人机协作才是未来', time: now - 3600000 * 4.5 },
-            { id: 'c4', authorId: 4, authorName: '晨曦', content: '我觉得还是要保持学习的热情', time: now -
-                    3600000 * 4 }], views: 128, shares: 12, price: 0 },
-        { id: 3, title: '独立开发者的日常 —— 从零到上线', content: '花了一个月时间，独立开发了一款笔记应用。从构思、设计、编码到测试上线，每一步都充满挑战。这里分享一些心得和踩过的坑，希望对大家有帮助。', authorId: 3,
-            authorName: '晚风', time: now - 3600000 * 10, likes: [1, 4], comments: [{ id: 'c5',
-                authorId: 1, authorName: '星辰', content: '太强了！我也想学独立开发', time: now - 3600000 * 9 },
-            { id: 'c6', authorId: 2, authorName: '月光', content: '后端用的什么框架？', time: now - 3600000 *
-                    8.5 }], views: 89, shares: 7, price: 9.99 },
-        { id: 4, title: '2026 年值得关注的 5 个科技趋势', content: '1. 边缘计算 2. 生成式 AI 3. 量子计算 4. 脑机接口 5. 可持续能源。这些领域在未来几年将迎来爆发式增长，值得提前布局。', authorId: 4,
-            authorName: '晨曦', time: now - 3600000 * 18, likes: [2, 3], comments: [{ id: 'c7',
-                authorId: 2, authorName: '月光', content: '量子计算还早吧？', time: now - 3600000 * 17 },
-            { id: 'c8', authorId: 3, authorName: '晚风', content: '边缘计算确实是大趋势', time: now - 3600000 *
-                    16.5 }], views: 210, shares: 25, price: 0 },
-        { id: 5, title: '我的读书笔记：<人类群星闪耀时>', content: '茨威格的这本书让我深受触动。历史的关键时刻，往往由少数人的勇气和决断所决定。摘抄几段与大家共勉： "一个人生命中最大的幸运，莫过于在他的人生中途，即在他年富力强时发现了自己的使命。"', authorId: 1,
-            authorName: '星辰', time: now - 3600000 * 24, likes: [4], comments: [{ id: 'c9',
-                authorId: 4, authorName: '晨曦', content: '这本书我也读过，真的很震撼', time: now - 3600000 *
-                    23 }], views: 56, shares: 4, price: 0 },
-        { id: 6, title: '付费深度内容：如何构建个人知识体系', content: '（付费内容预览）在这个信息爆炸的时代，构建一个属于自己的知识体系至关重要。本文将分享一套完整的知识管理方法论，包括信息收集、整理、内化和输出四个环节。', authorId: 2,
-            authorName: '月光', time: now - 3600000 * 30, likes: [1, 3, 4], comments: [{ id: 'c10',
-                authorId: 1, authorName: '星辰', content: '付费支持！干货满满', time: now - 3600000 * 29 },
-            { id: 'c11', authorId: 3, authorName: '晚风', content: '已购，内容很值', time: now - 3600000 *
-                    28 }], views: 320, shares: 18, price: 19.99 },
-        { id: 7, title: '旅行 vlog：大理的慢生活', content: '在大理待了一周，每天看云、喝茶、散步。这里的节奏很慢，但每一天都很充实。附上一些随手拍的照片，希望能把这份惬意传递给你。', authorId: 3,
-            authorName: '晚风', time: now - 3600000 * 40, likes: [1, 2, 4], comments: [{ id: 'c12',
-                authorId: 1, authorName: '星辰', content: '大理是我一直想去的地方', time: now - 3600000 * 39 },
-            { id: 'c13', authorId: 2, authorName: '月光', content: '照片拍得太有感觉了', time: now - 3600000 *
-                    38 }, { id: 'c14', authorId: 4, authorName: '晨曦', content: '下次一起啊！',
-                time: now - 3600000 * 37 }], views: 176, shares: 9, price: 0 },
+    data.posts = [
+        { id: 1, title: '分享我最近的摄影作品', content: '周末去了郊外，拍到了绝美的日落。金色的阳光洒在田野上，一切都那么宁静美好。', authorId: 1,
+            authorName: '星辰', authorAvatar: '', time: now - 3600000 * 2, likes: [2, 3], comments: [], views: 45,
+            shares: 3, price: 0, images: [], video: '' },
+        { id: 2, title: 'AI 时代下我们该如何自处', content: '最近 ChatGPT 大火，很多人担心被取代。我的观点是：AI 是工具，不是对手。', authorId: 2,
+            authorName: '月光', authorAvatar: '', time: now - 3600000 * 5, likes: [1, 3, 4], comments: [],
+            views: 128, shares: 12, price: 0, images: [], video: '' },
+        { id: 3, title: '独立开发者的日常 —— 从零到上线', content: '花了一个月时间，独立开发了一款笔记应用。从构思、设计、编码到测试上线，每一步都充满挑战。', authorId: 3,
+            authorName: '晚风', authorAvatar: '', time: now - 3600000 * 10, likes: [1, 4], comments: [],
+            views: 89, shares: 7, price: 9.99, images: [], video: '' },
+        { id: 4, title: '2026 年值得关注的 5 个科技趋势', content: '1. 边缘计算 2. 生成式 AI 3. 量子计算 4. 脑机接口 5. 可持续能源。', authorId: 4,
+            authorName: '晨曦', authorAvatar: '', time: now - 3600000 * 18, likes: [2, 3], comments: [],
+            views: 210, shares: 25, price: 0, images: [], video: '' },
+        { id: 5, title: '我的读书笔记：<人类群星闪耀时>', content: '茨威格的这本书让我深受触动。历史的关键时刻，往往由少数人的勇气和决断所决定。', authorId: 1,
+            authorName: '星辰', authorAvatar: '', time: now - 3600000 * 24, likes: [4], comments: [],
+            views: 56, shares: 4, price: 0, images: [], video: '' },
     ];
-    data.posts = posts;
-    data.nextPostId = 8;
+    data.nextPostId = 6;
     saveData();
 }
 initSampleData();
 
 // ================================================================
-//  STATE
+// STATE
 // ================================================================
 let currentUser = null;
 let currentSort = 'new';
 let currentRank = 'discuss';
 let viewingPostId = null;
-let sharePostId = null;
+let uploadImages = [];
+let uploadVideo = null;
 
 // ================================================================
-//  DOM REFS
+// DOM REFS
 // ================================================================
 const $ = (s, ctx = document) => ctx.querySelector(s);
 const $$ = (s, ctx = document) => [...ctx.querySelectorAll(s)];
 
 const toastEl = $('#toast');
+const userArea = $('#userArea');
 const navLinks = $('#navLinks');
 const navToggle = $('#navToggle');
-const userArea = $('#userArea');
 const postList = $('#postList');
 const feedTabs = $('#feedTabs');
 const rankTabs = $('#rankTabs');
 const rankList = $('#rankList');
-const detailModal = $('#detailModal');
-const detailContent = $('#detailContent');
-const detailClose = $('#detailClose');
 const authModal = $('#authModal');
 const authContent = $('#authContent');
 const authClose = $('#authClose');
-const shareModal = $('#shareModal');
-const shareLinkInput = $('#shareLinkInput');
-const shareCopyBtn = $('#shareCopyBtn');
-const shareClose = $('#shareClose');
+const profileBox = $('#profileBox');
 const btnPublish = $('#btnPublish');
 const pubTitle = $('#pubTitle');
 const pubContent = $('#pubContent');
 const pubPrice = $('#pubPrice');
-const profileBox = $('#profileBox');
+const pubImages = $('#pubImages');
+const pubVideo = $('#pubVideo');
+const btnUploadImages = $('#btnUploadImages');
+const btnUploadVideo = $('#btnUploadVideo');
+const imageCount = $('#imageCount');
+const videoCount = $('#videoCount');
+const imagePreview = $('#imagePreview');
+const videoPreview = $('#videoPreview');
+const detailModal = $('#detailModal');
+const detailContent = $('#detailContent');
+const detailClose = $('#detailClose');
+const shareModal = $('#shareModal');
+const shareLinkInput = $('#shareLinkInput');
+const shareCopyBtn = $('#shareCopyBtn');
+const shareClose = $('#shareClose');
+const champions = $('#champions');
 
 // ================================================================
-//  TOAST
+// TOAST
 // ================================================================
 let toastTimer = null;
 
@@ -150,7 +130,7 @@ function showToast(msg, type = 'info') {
 }
 
 // ================================================================
-//  AUTH
+// AUTH
 // ================================================================
 function getCurrentUser() {
     if (currentUser) return currentUser;
@@ -176,6 +156,7 @@ function setCurrentUser(user) {
     renderFeed();
     renderRank();
     renderProfile();
+    renderChampions();
 }
 
 function requireAuth() {
@@ -189,52 +170,60 @@ function requireAuth() {
 }
 
 // ================================================================
-//  NAV
+// NAV
 // ================================================================
 function renderNav() {
     const user = getCurrentUser();
     if (user) {
-        // 使用用户头像，如果没有则使用首字母
-        const avatarHtml = user.avatar ? 
-            `<img src="${user.avatar}" alt="头像" style="width:34px;height:34px;border-radius:50%;object-fit:cover;" />` :
-            `<span class="avatar-sm">${user.username.charAt(0).toUpperCase()}</span>`;
-        
+        const avatarHtml = user.avatar ?
+            `<img src="${user.avatar}" alt="头像" />` :
+            `<span>${user.username.charAt(0).toUpperCase()}</span>`;
         userArea.innerHTML = `
-            ${avatarHtml}
+            <div class="avatar-sm">${avatarHtml}</div>
             <span class="username">${user.username}</span>
             <button class="btn-logout" id="btnLogout"><i class="fas fa-sign-out-alt"></i> 退出</button>
         `;
         const btnLogout = $('#btnLogout');
-        if (btnLogout) btnLogout.addEventListener('click', () => {
-            setCurrentUser(null);
-            showToast('已退出', 'info');
-            closeAllModals();
-        });
+        if (btnLogout) {
+            btnLogout.addEventListener('click', () => {
+                setCurrentUser(null);
+                showToast('已退出', 'info');
+                closeAllModals();
+            });
+        }
     } else {
         userArea.innerHTML = `
             <button class="btn-login" id="btnLogin"><i class="fas fa-user-plus"></i> 登录 / 注册</button>
         `;
         const btnLogin = $('#btnLogin');
-        if (btnLogin) btnLogin.addEventListener('click', openAuthModal);
+        if (btnLogin) {
+            btnLogin.addEventListener('click', openAuthModal);
+        }
     }
 }
 
+// ================================================================
+// NAVIGATION
+// ================================================================
 function navigateTo(page) {
     $$('.page').forEach(el => el.classList.remove('active'));
     const target = $('#page-' + page);
     if (target) target.classList.add('active');
+
     $$('.nav-links a').forEach(a => {
         a.classList.toggle('active', a.dataset.page === page);
     });
-    navLinks.classList.remove('open');
+
     if (page === 'publish' || page === 'profile') {
         $('#sidebar').style.display = 'none';
     } else {
         $('#sidebar').style.display = '';
     }
+
     if (page === 'home') {
         renderFeed();
         renderRank();
+        renderChampions();
     }
     if (page === 'profile') {
         renderProfile();
@@ -244,8 +233,7 @@ function navigateTo(page) {
 $$('.nav-links a').forEach(a => {
     a.addEventListener('click', (e) => {
         e.preventDefault();
-        const page = a.dataset.page;
-        if (page) navigateTo(page);
+        navigateTo(a.dataset.page);
     });
 });
 
@@ -254,7 +242,7 @@ navToggle.addEventListener('click', () => {
 });
 
 // ================================================================
-//  AUTH MODAL
+// AUTH MODAL
 // ================================================================
 let authMode = 'login';
 
@@ -272,7 +260,7 @@ function renderAuthForm() {
     authContent.innerHTML = `
         <div class="auth-title">${isLogin ? '登录' : '注册'}账号</div>
         <div class="auth-sub">${isLogin ? '欢迎回来！' : '加入趣社区，分享你的精彩'}</div>
-        <form id="authForm" autocomplete="off">
+        <form id="authForm">
             <div class="form-group">
                 <label>用户名</label>
                 <input type="text" id="authUsername" placeholder="请输入用户名" required />
@@ -294,8 +282,11 @@ function renderAuthForm() {
             <a id="authSwitch">${isLogin ? '去注册' : '去登录'}</a>
         </div>
     `;
+
     const form = $('#authForm');
-    form.addEventListener('submit', handleAuthSubmit);
+    if (form) {
+        form.addEventListener('submit', handleAuthSubmit);
+    }
     const switchLink = $('#authSwitch');
     if (switchLink) {
         switchLink.addEventListener('click', () => {
@@ -309,7 +300,11 @@ function handleAuthSubmit(e) {
     e.preventDefault();
     const username = $('#authUsername').value.trim();
     const password = $('#authPassword').value.trim();
-    if (!username || !password) { showToast('请填写完整信息', 'error'); return; }
+    if (!username || !password) {
+        showToast('请填写完整信息', 'error');
+        return;
+    }
+
     if (authMode === 'login') {
         const user = data.users.find(u => u.username === username && u.password === password);
         if (!user) {
@@ -322,9 +317,13 @@ function handleAuthSubmit(e) {
         renderFeed();
         renderRank();
         renderProfile();
+        renderChampions();
     } else {
         const password2 = $('#authPassword2').value.trim();
-        if (password !== password2) { showToast('两次密码输入不一致', 'error'); return; }
+        if (password !== password2) {
+            showToast('两次密码输入不一致', 'error');
+            return;
+        }
         if (data.users.find(u => u.username === username)) {
             showToast('用户名已存在', 'error');
             return;
@@ -344,6 +343,7 @@ function handleAuthSubmit(e) {
         renderFeed();
         renderRank();
         renderProfile();
+        renderChampions();
     }
 }
 
@@ -353,33 +353,118 @@ authModal.addEventListener('click', (e) => {
 });
 
 // ================================================================
-//  FEED
+// CHAMPIONS (顶部三个排行榜第一名)
 // ================================================================
-function renderFeed() {
-    const sort = currentSort;
-    let posts = [...data.posts];
-    if (sort === 'new') {
-        posts.sort((a, b) => b.time - a.time);
-    } else if (sort === 'hot') {
-        posts.sort((a, b) => (b.likes.length + b.comments.length) - (a.likes.length + a.comments.length));
-    }
-    const user = getCurrentUser();
+function renderChampions() {
+    const posts = data.posts;
     if (posts.length === 0) {
-        postList.innerHTML = `<div style="text-align:center;padding:60px 0;color:var(--text-secondary);">
-            <i class="fas fa-inbox" style="font-size:40px;display:block;margin-bottom:12px;"></i>
-            暂无帖子，快来发布第一条吧！
-        </div>`;
+        champions.innerHTML = '';
         return;
     }
+
+    // 讨论度第一
+    const discussSorted = [...posts].sort((a, b) =>
+        (b.likes.length + b.comments.length) - (a.likes.length + a.comments.length)
+    );
+    const discussChamp = discussSorted[0];
+
+    // 点赞量第一
+    const likesSorted = [...posts].sort((a, b) => b.likes.length - a.likes.length);
+    const likesChamp = likesSorted[0];
+
+    // 付费最高第一
+    const priceSorted = [...posts].sort((a, b) => (b.price || 0) - (a.price || 0));
+    const priceChamp = priceSorted[0];
+
+    const champs = [
+        { label: '🔥 讨论度 No.1', post: discussChamp, key: 'discuss' },
+        { label: '❤️ 点赞量 No.1', post: likesChamp, key: 'likes' },
+        { label: '💰 付费最高 No.1', post: priceChamp, key: 'price' },
+    ];
+
+    let html = '';
+    champs.forEach(({ label, post, key }) => {
+        if (!post) return;
+        const rankText = key === 'discuss' ? `互动 ${post.likes.length + post.comments.length}` :
+            key === 'likes' ? `点赞 ${post.likes.length}` :
+            `¥${(post.price || 0).toFixed(2)}`;
+        html += `
+            <div class="champion-item" onclick="openDetail(${post.id})">
+                <div class="champ-label">${label}</div>
+                <div class="champ-title">${escapeHtml(post.title)}</div>
+                <div class="champ-meta">${post.authorName} · ${formatTime(post.time)}</div>
+                <div class="champ-badge">${rankText}</div>
+            </div>
+        `;
+    });
+
+    champions.innerHTML = html;
+}
+
+// ================================================================
+// FEED
+// ================================================================
+function renderFeed() {
+    let posts = [...data.posts];
+    if (currentSort === 'new') {
+        posts.sort((a, b) => b.time - a.time);
+    } else {
+        posts.sort((a, b) => (b.likes.length + b.comments.length) - (a.likes.length + a.comments.length));
+    }
+
+    const user = getCurrentUser();
+    if (posts.length === 0) {
+        postList.innerHTML = `
+            <div style="text-align:center;padding:60px 0;color:var(--text-secondary);">
+                <i class="fas fa-inbox" style="font-size:40px;display:block;margin-bottom:12px;"></i>
+                暂无帖子，快来发布第一条吧！
+            </div>
+        `;
+        return;
+    }
+
+    // 获取排行榜信息
+    const rankInfo = getRankInfo();
+
     let html = '';
     posts.forEach(p => {
         const liked = user ? p.likes.includes(user.id) : false;
         const commentCount = p.comments ? p.comments.length : 0;
         const price = p.price || 0;
+
+        // 热度徽章
+        let hotBadge = '';
+        if (p.likes.length + commentCount > 20) {
+            hotBadge = `<span class="hot-badge">🔥 热门</span>`;
+        }
+
+        // 排行榜徽章
+        let rankBadge = '';
+        if (rankInfo[p.id]) {
+            rankBadge = `<span class="rank-badge">🏆 ${rankInfo[p.id]}</span>`;
+        }
+
+        // 作者头像
+        const authorUser = data.users.find(u => u.id === p.authorId);
+        const authorAvatar = authorUser && authorUser.avatar ? authorUser.avatar : '';
+
+        // 媒体
+        let mediaHtml = '';
+        if (p.images && p.images.length > 0) {
+            mediaHtml += `<div class="post-media">`;
+            p.images.forEach(img => {
+                mediaHtml += `<img src="${img}" alt="图片" />`;
+            });
+            mediaHtml += `</div>`;
+        }
+        if (p.video) {
+            mediaHtml += `<div class="post-media"><video src="${p.video}" controls></video></div>`;
+        }
+
         html += `
             <div class="post-card" data-id="${p.id}">
                 <div class="post-header">
-                    <div class="avatar">${p.authorName.charAt(0).toUpperCase()}</div>
+                    <div class="avatar">${authorAvatar ? `<img src="${authorAvatar}" />` : p.authorName.charAt(0).toUpperCase()}</div>
                     <div class="info">
                         <div class="name">${p.authorName}</div>
                         <div class="time">${formatTime(p.time)}</div>
@@ -387,6 +472,7 @@ function renderFeed() {
                 </div>
                 <div class="post-title">${escapeHtml(p.title)}</div>
                 <div class="post-content">${escapeHtml(p.content)}</div>
+                ${mediaHtml}
                 <div class="post-meta">
                     <button class="action-btn like-btn ${liked ? 'liked' : ''}" data-id="${p.id}">
                         <i class="${liked ? 'fas' : 'far'} fa-heart"></i>
@@ -397,24 +483,19 @@ function renderFeed() {
                         <span class="count">${commentCount}</span>
                     </button>
                     <button class="action-btn share-btn" data-id="${p.id}">
-                        <i class="fas fa-share-square"></i>
+                        <i class="fas fa-share-alt"></i>
                         <span class="count">${p.shares || 0}</span>
                     </button>
                     ${price > 0 ? `<span class="price-tag"><i class="fas fa-coins"></i> ¥${price.toFixed(2)}</span>` : ''}
+                    ${hotBadge}
+                    ${rankBadge}
                 </div>
             </div>
         `;
     });
     postList.innerHTML = html;
 
-    $$('.post-card').forEach(card => {
-        card.addEventListener('click', (e) => {
-            if (e.target.closest('.action-btn')) return;
-            const id = parseInt(card.dataset.id, 10);
-            if (id) openDetail(id);
-        });
-    });
-
+    // 事件绑定
     $$('.like-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -438,44 +519,95 @@ function renderFeed() {
             if (id) openShare(id);
         });
     });
+
+    $$('.post-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const id = parseInt(card.dataset.id, 10);
+            if (id) openDetail(id);
+        });
+    });
 }
 
 feedTabs.addEventListener('click', (e) => {
     const btn = e.target.closest('button');
     if (!btn) return;
-    const sort = btn.dataset.sort;
-    if (!sort) return;
     $$('.feed-header .tabs button').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    currentSort = sort;
+    currentSort = btn.dataset.sort;
     renderFeed();
 });
 
 // ================================================================
-//  RANK
+// RANK INFO (获取每个帖子的排名)
+// ================================================================
+function getRankInfo() {
+    const posts = data.posts;
+    const result = {};
+
+    // 讨论度排名
+    const discussSorted = [...posts].sort((a, b) =>
+        (b.likes.length + b.comments.length) - (a.likes.length + a.comments.length)
+    );
+    discussSorted.forEach((p, idx) => {
+        if (idx < 10) {
+            if (!result[p.id]) result[p.id] = [];
+            result[p.id].push(`讨论度 No.${idx + 1}`);
+        }
+    });
+
+    // 点赞量排名
+    const likesSorted = [...posts].sort((a, b) => b.likes.length - a.likes.length);
+    likesSorted.forEach((p, idx) => {
+        if (idx < 10) {
+            if (!result[p.id]) result[p.id] = [];
+            result[p.id].push(`点赞 No.${idx + 1}`);
+        }
+    });
+
+    // 付费排名
+    const priceSorted = [...posts].sort((a, b) => (b.price || 0) - (a.price || 0));
+    priceSorted.forEach((p, idx) => {
+        if (idx < 10 && (p.price || 0) > 0) {
+            if (!result[p.id]) result[p.id] = [];
+            result[p.id].push(`付费 No.${idx + 1}`);
+        }
+    });
+
+    // 转为字符串
+    for (const key in result) {
+        result[key] = result[key].join(' · ');
+    }
+
+    return result;
+}
+
+// ================================================================
+// RANK (侧边栏)
 // ================================================================
 function renderRank() {
-    const type = currentRank;
     let list = [...data.posts];
-    if (type === 'discuss') {
+    if (currentRank === 'discuss') {
         list.sort((a, b) => (b.likes.length + b.comments.length) - (a.likes.length + a.comments.length));
-    } else if (type === 'likes') {
+    } else if (currentRank === 'likes') {
         list.sort((a, b) => b.likes.length - a.likes.length);
-    } else if (type === 'price') {
+    } else {
         list.sort((a, b) => (b.price || 0) - (a.price || 0));
     }
+
     const top = list.slice(0, 10);
     if (top.length === 0) {
         rankList.innerHTML = `<div class="rank-empty">暂无数据</div>`;
         return;
     }
+
     let html = '';
     top.forEach((p, idx) => {
         const numClass = idx === 0 ? 'top1' : idx === 1 ? 'top2' : idx === 2 ? 'top3' : '';
         let value = '';
-        if (type === 'discuss') value = (p.likes.length + p.comments.length) + ' 互动';
-        else if (type === 'likes') value = p.likes.length + ' 赞';
-        else if (type === 'price') value = '¥' + (p.price || 0).toFixed(2);
+        if (currentRank === 'discuss') value = (p.likes.length + p.comments.length) + ' 互动';
+        else if (currentRank === 'likes') value = p.likes.length + ' 赞';
+        else value = '¥' + (p.price || 0).toFixed(2);
+
         html += `
             <div class="rank-item" data-id="${p.id}">
                 <div class="rank-num ${numClass}">${idx + 1}</div>
@@ -488,6 +620,7 @@ function renderRank() {
         `;
     });
     rankList.innerHTML = html;
+
     $$('.rank-item').forEach(item => {
         item.addEventListener('click', () => {
             const id = parseInt(item.dataset.id, 10);
@@ -499,20 +632,45 @@ function renderRank() {
 rankTabs.addEventListener('click', (e) => {
     const btn = e.target.closest('button');
     if (!btn) return;
-    const rank = btn.dataset.rank;
-    if (!rank) return;
     $$('.rank-tabs button').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    currentRank = rank;
+    currentRank = btn.dataset.rank;
     renderRank();
 });
 
 // ================================================================
-//  DETAIL
+// LIKE
+// ================================================================
+function toggleLike(postId) {
+    const user = requireAuth();
+    if (!user) return;
+    const post = data.posts.find(p => p.id === postId);
+    if (!post) return;
+
+    const idx = post.likes.indexOf(user.id);
+    if (idx > -1) {
+        post.likes.splice(idx, 1);
+        showToast('已取消点赞', 'info');
+    } else {
+        post.likes.push(user.id);
+        showToast('点赞成功 ❤️', 'success');
+    }
+    saveData();
+    renderFeed();
+    renderRank();
+    renderChampions();
+    if (detailModal.classList.contains('open') && viewingPostId === postId) {
+        openDetail(postId);
+    }
+}
+
+// ================================================================
+// DETAIL
 // ================================================================
 function openDetail(postId) {
     const post = data.posts.find(p => p.id === postId);
     if (!post) { showToast('帖子不存在', 'error'); return; }
+
     viewingPostId = postId;
     post.views = (post.views || 0) + 1;
     saveData();
@@ -522,13 +680,32 @@ function openDetail(postId) {
     const commentCount = post.comments ? post.comments.length : 0;
     const price = post.price || 0;
 
+    const authorUser = data.users.find(u => u.id === post.authorId);
+    const authorAvatar = authorUser && authorUser.avatar ? authorUser.avatar : '';
+
+    // 媒体
+    let mediaHtml = '';
+    if (post.images && post.images.length > 0) {
+        mediaHtml += `<div class="detail-media">`;
+        post.images.forEach(img => {
+            mediaHtml += `<img src="${img}" alt="图片" />`;
+        });
+        mediaHtml += `</div>`;
+    }
+    if (post.video) {
+        mediaHtml += `<div class="detail-media"><video src="${post.video}" controls></video></div>`;
+    }
+
+    // 评论
     let commentsHtml = '';
     if (post.comments && post.comments.length > 0) {
         post.comments.forEach(c => {
+            const cUser = data.users.find(u => u.id === c.authorId);
+            const cAvatar = cUser && cUser.avatar ? cUser.avatar : '';
             const cName = c.authorName || '匿名';
             commentsHtml += `
                 <div class="comment-item">
-                    <div class="c-avatar">${cName.charAt(0).toUpperCase()}</div>
+                    <div class="c-avatar">${cAvatar ? `<img src="${cAvatar}" />` : cName.charAt(0).toUpperCase()}</div>
                     <div class="c-body">
                         <span class="c-name">${cName}</span>
                         <span class="c-time">${formatTime(c.time)}</span>
@@ -543,7 +720,7 @@ function openDetail(postId) {
 
     detailContent.innerHTML = `
         <div class="detail-header">
-            <div class="avatar">${post.authorName.charAt(0).toUpperCase()}</div>
+            <div class="avatar">${authorAvatar ? `<img src="${authorAvatar}" />` : post.authorName.charAt(0).toUpperCase()}</div>
             <div class="info">
                 <div class="name">${post.authorName}</div>
                 <div class="time">${formatTime(post.time)} · ${post.views || 0} 次浏览</div>
@@ -551,6 +728,7 @@ function openDetail(postId) {
         </div>
         <div class="detail-title">${escapeHtml(post.title)}</div>
         <div class="detail-body">${escapeHtml(post.content)}</div>
+        ${mediaHtml}
         <div class="detail-meta">
             <button class="action-btn like-btn ${liked ? 'liked' : ''}" data-id="${post.id}">
                 <i class="${liked ? 'fas' : 'far'} fa-heart"></i>
@@ -561,7 +739,7 @@ function openDetail(postId) {
                 <span class="count">${commentCount}</span>
             </button>
             <button class="action-btn share-btn" data-id="${post.id}">
-                <i class="fas fa-share-square"></i>
+                <i class="fas fa-share-alt"></i>
                 <span class="count">${post.shares || 0}</span>
             </button>
             ${price > 0 ? `<span class="price-tag"><i class="fas fa-coins"></i> 付费 ¥${price.toFixed(2)}</span>` : ''}
@@ -570,24 +748,7 @@ function openDetail(postId) {
             <div class="comment-title"><i class="far fa-comment-dots"></i> 评论 (${commentCount})</div>
             <div class="comment-input">
                 <input type="text" id="commentInput" placeholder="写下你的评论..." />
-                <button class="emoji-btn" id="emojiToggle" title="选择图标">
-                    <i class="far fa-smile"></i>
-                </button>
                 <button id="commentSubmit">发送</button>
-            </div>
-            <div class="emoji-picker" id="emojiPicker">
-                <button class="emoji-option" data-emoji="😊">😊</button>
-                <button class="emoji-option" data-emoji="😂">😂</button>
-                <button class="emoji-option" data-emoji="❤️">❤️</button>
-                <button class="emoji-option" data-emoji="👍">👍</button>
-                <button class="emoji-option" data-emoji="🔥">🔥</button>
-                <button class="emoji-option" data-emoji="🎉">🎉</button>
-                <button class="emoji-option" data-emoji="💡">💡</button>
-                <button class="emoji-option" data-emoji="🙌">🙌</button>
-                <button class="emoji-option" data-emoji="✨">✨</button>
-                <button class="emoji-option" data-emoji="💪">💪</button>
-                <button class="emoji-option" data-emoji="🤔">🤔</button>
-                <button class="emoji-option" data-emoji="👏">👏</button>
             </div>
             <div id="commentList">${commentsHtml}</div>
         </div>
@@ -595,6 +756,7 @@ function openDetail(postId) {
 
     detailModal.classList.add('open');
 
+    // 点赞
     const likeBtn = detailContent.querySelector('.like-btn');
     if (likeBtn) {
         likeBtn.addEventListener('click', () => {
@@ -603,6 +765,16 @@ function openDetail(postId) {
         });
     }
 
+    // 分享
+    const shareBtn = detailContent.querySelector('.share-btn');
+    if (shareBtn) {
+        shareBtn.addEventListener('click', () => {
+            const id = parseInt(shareBtn.dataset.id, 10);
+            if (id) openShare(id);
+        });
+    }
+
+    // 评论
     const commentInput = detailContent.querySelector('#commentInput');
     const commentSubmit = detailContent.querySelector('#commentSubmit');
     if (commentSubmit && commentInput) {
@@ -627,47 +799,11 @@ function openDetail(postId) {
             openDetail(postId);
             renderFeed();
             renderRank();
+            renderChampions();
         };
         commentSubmit.addEventListener('click', submitComment);
         commentInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') submitComment();
-        });
-    }
-
-    // 图标选择器
-    const emojiToggle = detailContent.querySelector('#emojiToggle');
-    const emojiPicker = detailContent.querySelector('#emojiPicker');
-    if (emojiToggle && emojiPicker) {
-        emojiToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            emojiPicker.classList.toggle('open');
-        });
-        document.addEventListener('click', () => {
-            emojiPicker.classList.remove('open');
-        });
-        emojiPicker.querySelectorAll('.emoji-option').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const emoji = btn.dataset.emoji;
-                const input = detailContent.querySelector('#commentInput');
-                if (input) {
-                    const start = input.selectionStart;
-                    const end = input.selectionEnd;
-                    const text = input.value;
-                    input.value = text.substring(0, start) + emoji + text.substring(end);
-                    input.focus();
-                    input.selectionStart = input.selectionEnd = start + emoji.length;
-                }
-                emojiPicker.classList.remove('open');
-            });
-        });
-    }
-
-    const shareBtn = detailContent.querySelector('.share-btn');
-    if (shareBtn) {
-        shareBtn.addEventListener('click', () => {
-            const id = parseInt(shareBtn.dataset.id, 10);
-            if (id) openShare(id);
         });
     }
 }
@@ -676,53 +812,33 @@ detailClose.addEventListener('click', () => {
     detailModal.classList.remove('open');
     renderFeed();
     renderRank();
+    renderChampions();
 });
 detailModal.addEventListener('click', (e) => {
     if (e.target === detailModal) {
         detailModal.classList.remove('open');
         renderFeed();
         renderRank();
+        renderChampions();
     }
 });
 
 // ================================================================
-//  LIKE
-// ================================================================
-function toggleLike(postId) {
-    const user = requireAuth();
-    if (!user) return;
-    const post = data.posts.find(p => p.id === postId);
-    if (!post) { showToast('帖子不存在', 'error'); return; }
-    const idx = post.likes.indexOf(user.id);
-    if (idx > -1) {
-        post.likes.splice(idx, 1);
-        showToast('已取消点赞', 'info');
-    } else {
-        post.likes.push(user.id);
-        showToast('点赞成功 ❤️', 'success');
-    }
-    saveData();
-    renderFeed();
-    renderRank();
-    if (detailModal.classList.contains('open') && viewingPostId === postId) {
-        openDetail(postId);
-    }
-}
-
-// ================================================================
-//  SHARE
+// SHARE
 // ================================================================
 function openShare(postId) {
     const post = data.posts.find(p => p.id === postId);
     if (!post) { showToast('帖子不存在', 'error'); return; }
-    sharePostId = postId;
+
     post.shares = (post.shares || 0) + 1;
     saveData();
+
     const url = window.location.href.split('?')[0] + '?post=' + postId;
     shareLinkInput.value = url;
     shareModal.classList.add('open');
     renderFeed();
     renderRank();
+    renderChampions();
 }
 
 shareCopyBtn.addEventListener('click', () => {
@@ -754,14 +870,130 @@ shareModal.addEventListener('click', (e) => {
 });
 
 // ================================================================
-//  PUBLISH
+// PUBLISH (支持图片/视频上传)
 // ================================================================
+// 图片上传
+btnUploadImages.addEventListener('click', () => {
+    pubImages.click();
+});
+
+pubImages.addEventListener('change', function(e) {
+    const files = Array.from(this.files);
+    const remaining = 8 - uploadImages.length;
+
+    if (files.length > remaining) {
+        showToast(`最多还能上传 ${remaining} 张图片`, 'error');
+        this.value = '';
+        return;
+    }
+
+    files.forEach(file => {
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('图片不能超过 5MB', 'error');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            uploadImages.push(e.target.result);
+            renderImagePreview();
+            updateImageCount();
+        };
+        reader.readAsDataURL(file);
+    });
+    this.value = '';
+});
+
+function renderImagePreview() {
+    let html = '';
+    uploadImages.forEach((img, idx) => {
+        html += `
+            <div class="preview-item">
+                <img src="${img}" alt="图片" />
+                <button class="remove-btn" data-idx="${idx}"><i class="fas fa-times"></i></button>
+            </div>
+        `;
+    });
+    imagePreview.innerHTML = html;
+
+    imagePreview.querySelectorAll('.remove-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const idx = parseInt(this.dataset.idx, 10);
+            uploadImages.splice(idx, 1);
+            renderImagePreview();
+            updateImageCount();
+        });
+    });
+}
+
+function updateImageCount() {
+    imageCount.textContent = `已选 ${uploadImages.length} 张`;
+}
+
+// 视频上传
+btnUploadVideo.addEventListener('click', () => {
+    pubVideo.click();
+});
+
+pubVideo.addEventListener('change', function(e) {
+    const file = this.files[0];
+    if (!file) return;
+
+    if (uploadVideo) {
+        showToast('只能上传 1 个视频', 'error');
+        this.value = '';
+        return;
+    }
+
+    if (file.size > 50 * 1024 * 1024) {
+        showToast('视频不能超过 50MB', 'error');
+        this.value = '';
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        uploadVideo = e.target.result;
+        renderVideoPreview();
+        updateVideoCount();
+    };
+    reader.readAsDataURL(file);
+    this.value = '';
+});
+
+function renderVideoPreview() {
+    if (uploadVideo) {
+        videoPreview.innerHTML = `
+            <div class="preview-item">
+                <video src="${uploadVideo}" controls></video>
+                <button class="remove-btn" id="removeVideo"><i class="fas fa-times"></i></button>
+            </div>
+        `;
+        const removeBtn = document.getElementById('removeVideo');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', () => {
+                uploadVideo = null;
+                renderVideoPreview();
+                updateVideoCount();
+            });
+        }
+    } else {
+        videoPreview.innerHTML = '';
+    }
+}
+
+function updateVideoCount() {
+    videoCount.textContent = uploadVideo ? '已选择 1 个视频' : '未选择';
+}
+
+// 发布
 btnPublish.addEventListener('click', () => {
     const user = requireAuth();
     if (!user) return;
+
     const title = pubTitle.value.trim();
     const content = pubContent.value.trim();
     const price = parseFloat(pubPrice.value) || 0;
+
     if (!title) { showToast('请输入标题', 'error');
         pubTitle.focus(); return; }
     if (!content) { showToast('请输入内容', 'error');
@@ -780,26 +1012,37 @@ btnPublish.addEventListener('click', () => {
         views: 0,
         shares: 0,
         price: price,
+        images: [...uploadImages],
+        video: uploadVideo || '',
     };
+
     data.posts.unshift(newPost);
     saveData();
+
+    // 重置
     pubTitle.value = '';
     pubContent.value = '';
     pubPrice.value = '0';
+    uploadImages = [];
+    uploadVideo = null;
+    renderImagePreview();
+    updateImageCount();
+    renderVideoPreview();
+    updateVideoCount();
+
     showToast('发布成功！🎉', 'success');
     navigateTo('home');
     renderFeed();
     renderRank();
+    renderChampions();
 });
 
 // ================================================================
-//  PROFILE
+// PROFILE (含头像功能)
 // ================================================================
 function renderProfile() {
-    // 1. 获取当前登录用户
     const user = getCurrentUser();
-    
-    // 2. 如果未登录，显示提示
+
     if (!user) {
         profileBox.innerHTML = `
             <div class="profile-empty">
@@ -814,91 +1057,67 @@ function renderProfile() {
         return;
     }
 
-    // 3. 准备头像显示内容 (如果有头像URL就显示图片，否则显示首字母)
     const avatarUrl = user.avatar || '';
-    const avatarDisplay = avatarUrl ? 
-        `<img src="${avatarUrl}" alt="头像" style="width:72px;height:72px;border-radius:50%;object-fit:cover;display:block;" />` :
-        `<div class="big-avatar" style="width:72px;height:72px;border-radius:50%;background:var(--primary-light);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;">${user.username.charAt(0).toUpperCase()}</div>`;
+    const avatarDisplay = avatarUrl ?
+        `<img src="${avatarUrl}" alt="头像" />` :
+        `<div class="big-avatar">${user.username.charAt(0).toUpperCase()}</div>`;
 
-    // 4. 获取该用户发布的帖子列表
     const userPosts = data.posts.filter(p => p.authorId === user.id);
     let postsHtml = '';
     if (userPosts.length === 0) {
-        postsHtml = `<div class="profile-empty" style="padding:20px 0;">你还没有发布过帖子</div>`;
+        postsHtml = `<div class="profile-empty">你还没有发布过帖子</div>`;
     } else {
         userPosts.forEach(p => {
             postsHtml += `
-                <div class="pp-item" data-id="${p.id}" style="padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;">
-                    <div class="pp-title-text" style="font-weight:500;">${escapeHtml(p.title)}</div>
-                    <div class="pp-meta" style="font-size:13px;color:var(--text-secondary);">${formatTime(p.time)} · ${p.likes.length} 赞 · ${p.comments ? p.comments.length : 0} 评论</div>
+                <div class="pp-item" data-id="${p.id}">
+                    <div class="pp-title-text">${escapeHtml(p.title)}</div>
+                    <div class="pp-meta">${formatTime(p.time)} · ${p.likes.length} 赞 · ${p.comments ? p.comments.length : 0} 评论</div>
                 </div>
             `;
         });
     }
 
-    // 5. 渲染个人中心的完整 HTML (关键：头像区域完整结构)
     profileBox.innerHTML = `
-        <div class="profile-head" style="display:flex;align-items:center;gap:20px;margin-bottom:24px;flex-wrap:wrap;">
-            <!-- ===== 头像区域 START ===== -->
-            <div class="avatar-wrapper" id="avatarWrapper" style="position:relative;cursor:pointer;width:72px;height:72px;border-radius:50%;overflow:hidden;flex-shrink:0;">
+        <div class="profile-head">
+            <div class="avatar-wrapper" id="avatarWrapper">
                 ${avatarDisplay}
-                <!-- 悬停时显示的遮罩层 -->
-                <div class="avatar-overlay" id="avatarOverlay" style="position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,0.55);display:none;align-items:center;justify-content:center;flex-direction:column;color:#fff;pointer-events:none;">
-                    <i class="fas fa-camera" style="font-size:24px;margin-bottom:2px;"></i>
-                    <span style="font-size:12px;">更换头像</span>
+                <div class="avatar-overlay" id="avatarOverlay">
+                    <i class="fas fa-camera"></i>
+                    <span>更换头像</span>
                 </div>
-                <!-- 隐藏的文件输入框 -->
                 <input type="file" id="avatarInput" accept="image/*" style="display:none;" />
             </div>
-            <!-- ===== 头像区域 END ===== -->
-            
             <div class="p-info">
-                <div class="p-name" style="font-size:20px;font-weight:700;">${user.username}</div>
-                <div class="p-joined" style="font-size:14px;color:var(--text-secondary);">加入于 ${formatTime(user.joined)}</div>
-                <button class="btn-change-avatar" id="changeAvatarBtn" style="margin-top:6px;padding:4px 16px;background:var(--primary-light);color:var(--primary);border-radius:20px;font-size:13px;font-weight:500;border:none;cursor:pointer;transition:all 0.2s;">
+                <div class="p-name">${user.username}</div>
+                <div class="p-joined">加入于 ${formatTime(user.joined)}</div>
+                <button class="btn-change-avatar" id="changeAvatarBtn">
                     <i class="fas fa-camera"></i> 更换头像
                 </button>
             </div>
         </div>
         <div class="profile-posts">
-            <div class="pp-title" style="font-weight:600;font-size:16px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:8px;">我的帖子 (${userPosts.length})</div>
+            <div class="pp-title">我的帖子 (${userPosts.length})</div>
             ${postsHtml}
         </div>
     `;
 
-    // ================================================================
-    // 6. 绑定头像交互事件 (这是让相机图标显示和上传生效的关键)
-    // ================================================================
-    
-    // 获取元素
+    // 头像事件
     const avatarWrapper = document.getElementById('avatarWrapper');
     const avatarOverlay = document.getElementById('avatarOverlay');
     const changeAvatarBtn = document.getElementById('changeAvatarBtn');
     const avatarInput = document.getElementById('avatarInput');
 
-    // 确保 overlay 默认是隐藏的
     if (avatarOverlay) {
         avatarOverlay.style.display = 'none';
     }
 
-    // 鼠标悬停显示/隐藏遮罩
-    if (avatarWrapper && avatarOverlay) {
-        avatarWrapper.addEventListener('mouseenter', function() {
-            avatarOverlay.style.display = 'flex';
-        });
-        avatarWrapper.addEventListener('mouseleave', function() {
-            avatarOverlay.style.display = 'none';
-        });
-    }
-
-    // 点击头像 或 点击「更换头像」按钮，都触发文件选择
     if (avatarWrapper && avatarInput) {
         avatarWrapper.addEventListener('click', function(e) {
-            // 如果点的是按钮内部，不重复触发
             if (e.target.closest('.btn-change-avatar')) return;
             avatarInput.click();
         });
     }
+
     if (changeAvatarBtn && avatarInput) {
         changeAvatarBtn.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -906,38 +1125,38 @@ function renderProfile() {
         });
     }
 
-    // 文件选择后的处理 (上传头像)
     if (avatarInput) {
         avatarInput.addEventListener('change', function(e) {
             const file = this.files[0];
             if (!file) return;
 
-            // 校验文件大小 (2MB)
             if (file.size > 2 * 1024 * 1024) {
                 showToast('图片大小不能超过 2MB', 'error');
                 this.value = '';
                 return;
             }
 
-            // 校验文件类型
             if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
                 showToast('仅支持 JPG、PNG、GIF、WEBP 格式', 'error');
                 this.value = '';
                 return;
             }
 
-            // 读取文件并转为 Base64
             const reader = new FileReader();
             reader.onload = function(e) {
-                const base64 = e.target.result;
                 const currentUser = getCurrentUser();
                 if (currentUser) {
-                    // 保存头像到用户数据
-                    currentUser.avatar = base64;
+                    currentUser.avatar = e.target.result;
+                    // 更新所有帖子的作者头像
+                    data.posts.forEach(p => {
+                        if (p.authorId === currentUser.id) {
+                            p.authorAvatar = e.target.result;
+                        }
+                    });
                     saveData();
-                    // 刷新个人中心和导航栏
                     renderProfile();
                     renderNav();
+                    renderFeed();
                     showToast('头像更新成功！ 🎉', 'success');
                 }
             };
@@ -948,22 +1167,17 @@ function renderProfile() {
         });
     }
 
-    // 绑定帖子点击事件 (点击帖子打开详情)
-    document.querySelectorAll('.pp-item').forEach(item => {
+    // 帖子点击
+    $$('.pp-item').forEach(item => {
         item.addEventListener('click', function() {
             const id = parseInt(this.dataset.id, 10);
-            if (id) {
-                // 这里可以调用打开帖子详情的函数，如果没有可以先用 alert 代替
-                showToast('点击了帖子 ID: ' + id, 'info');
-                // 如果你有 openDetail 函数，可以取消注释下面的行
-                // openDetail(id);
-            }
+            if (id) openDetail(id);
         });
     });
 }
 
 // ================================================================
-//  UTILITY
+// UTILITY
 // ================================================================
 function formatTime(ts) {
     if (!ts) return '刚刚';
@@ -975,8 +1189,8 @@ function formatTime(ts) {
     if (diff < 259200000) return '前天';
     const d = new Date(ts);
     const pad = n => String(n).padStart(2, '0');
-    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d
-        .getMinutes());
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' +
+        pad(d.getHours()) + ':' + pad(d.getMinutes());
 }
 
 function escapeHtml(text) {
@@ -987,27 +1201,13 @@ function escapeHtml(text) {
 }
 
 function closeAllModals() {
-    detailModal.classList.remove('open');
     authModal.classList.remove('open');
+    detailModal.classList.remove('open');
     shareModal.classList.remove('open');
 }
 
 // ================================================================
-//  ROUTE
-// ================================================================
-function handleUrlParams() {
-    const params = new URLSearchParams(window.location.search);
-    const postId = params.get('post');
-    if (postId) {
-        const id = parseInt(postId, 10);
-        if (!isNaN(id)) {
-            setTimeout(() => openDetail(id), 300);
-        }
-    }
-}
-
-// ================================================================
-//  INIT
+// INIT
 // ================================================================
 function init() {
     const user = getCurrentUser();
@@ -1016,17 +1216,23 @@ function init() {
     renderFeed();
     renderRank();
     renderProfile();
-    handleUrlParams();
+    renderChampions();
 
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.navbar')) {
-            navLinks.classList.remove('open');
+    // URL 参数
+    const params = new URLSearchParams(window.location.search);
+    const postId = params.get('post');
+    if (postId) {
+        const id = parseInt(postId, 10);
+        if (!isNaN(id)) {
+            setTimeout(() => openDetail(id), 500);
         }
-    });
+    }
 }
 
+// 暴露给全局
 window.openAuthModal = openAuthModal;
 window.openDetail = openDetail;
+window.openShare = openShare;
 
 init();
 
@@ -1036,8 +1242,12 @@ window.addEventListener('storage', (e) => {
         renderFeed();
         renderRank();
         renderProfile();
+        renderChampions();
     }
 });
 
-console.log('🌟 趣社区已启动！数据存储在 localStorage 中。');
-console.log('📦 当前数据:', data);
+console.log('🌟 趣社区已启动！');
+console.log('📦 数据存储在 localStorage 中');
+console.log('💡 登录后进入「我的」页面，鼠标悬停到头像上即可更换头像');
+console.log('📸 发布帖子支持上传最多 8 张图片和 1 个视频');
+console.log('🏆 首页顶部展示三个排行榜的第一名');
