@@ -1768,10 +1768,28 @@
                 </div>
                 <div class="comments-section">
                     <div class="comment-title"><i class="far fa-comment-dots"></i> 评论 (${commentCount})</div>
-                    <div class="comment-input">
-                        <input type="text" id="commentInput" placeholder="写下你的评论..." />
-                        <button id="commentSubmit">发送</button>
-                    </div>
+<div class="comment-input">
+    <input type="text" id="commentInput" placeholder="写下你的评论..." />
+    <button class="emoji-btn" id="emojiToggle" title="选择图标">
+        <i class="far fa-smile"></i>
+    </button>
+    <button id="commentSubmit">发送</button>
+</div>
+<!-- 图标选择面板 -->
+<div class="emoji-picker" id="emojiPicker">
+    <button class="emoji-option" data-emoji="😊">😊</button>
+    <button class="emoji-option" data-emoji="😂">😂</button>
+    <button class="emoji-option" data-emoji="❤️">❤️</button>
+    <button class="emoji-option" data-emoji="👍">👍</button>
+    <button class="emoji-option" data-emoji="🔥">🔥</button>
+    <button class="emoji-option" data-emoji="🎉">🎉</button>
+    <button class="emoji-option" data-emoji="💡">💡</button>
+    <button class="emoji-option" data-emoji="🙌">🙌</button>
+    <button class="emoji-option" data-emoji="✨">✨</button>
+    <button class="emoji-option" data-emoji="💪">💪</button>
+    <button class="emoji-option" data-emoji="🤔">🤔</button>
+    <button class="emoji-option" data-emoji="👏">👏</button>
+</div>
                     <div id="commentList">${commentsHtml}</div>
                 </div>
             `;
