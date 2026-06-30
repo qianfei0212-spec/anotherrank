@@ -1246,6 +1246,82 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #a0a6b0;
         }
+
+        /* ===== Emoji 面板 ===== */
+.emoji-picker {
+    display: none;
+    position: absolute;
+    bottom: 70px;
+    left: 0;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    z-index: 100;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+    max-width: 280px;
+}
+.emoji-picker.open {
+    display: grid;
+}
+.emoji-picker .emoji-option {
+    padding: 6px 8px;
+    border-radius: 8px;
+    font-size: 22px;
+    background: transparent;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: none;
+}
+.emoji-picker .emoji-option:hover {
+    background: #e8eeff;
+    transform: scale(1.15);
+}
+.comment-input {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    position: relative;
+}
+.comment-input input {
+    flex: 1;
+    padding: 10px 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 30px;
+    background: #F0F2F5;
+    font-size: 14px;
+}
+.comment-input .emoji-btn {
+    padding: 10px 14px;
+    background: #F0F2F5;
+    border: 1px solid #e5e7eb;
+    border-radius: 30px;
+    color: #6b7280;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+.comment-input .emoji-btn:hover {
+    background: #e8eeff;
+    color: #4F7CFF;
+}
+.comment-input button#commentSubmit {
+    padding: 10px 24px;
+    background: #4F7CFF;
+    color: #fff;
+    border-radius: 30px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.comment-input button#commentSubmit:hover {
+    background: #3a5fd9;
+}
     </style>
 </head>
 <body>
@@ -1622,46 +1698,45 @@
         }
 
         function renderAuthForm() {
-            const isLogin = authMode === 'login';
-            authContent.innerHTML = `
-                <div class="auth-title">${isLogin ? '登录' : '注册'}账号</div>
-                <div class="auth-sub">${isLogin ? '欢迎回来！' : '加入趣社区，分享你的精彩'}</div>
-                <form id="authForm">
-                    <div class="form-group">
-                        <label>用户名</label>
-                        <input type="text" id="authUsername" placeholder="请输入用户名" required />
-                    </div>
-                    <div class="form-group">
-                        <label>密码</label>
-                        <input type="password" id="authPassword" placeholder="请输入密码" required />
-                    </div>
-                    ${!isLogin ? `
-                    <div class="form-group">
-                        <label>确认密码</label>
-                        <input type="password" id="authPassword2" placeholder="请再次输入密码" required />
-                    </div>
-                    ` : ''}
-                    <button type="submit" class="btn-auth">${isLogin ? '登 录' : '注 册'}</button>
-                </form>
-                <div class="auth-switch">
-                    ${isLogin ? '还没有账号？' : '已有账号？'}
-                    <a id="authSwitch">${isLogin ? '去注册' : '去登录'}</a>
-                </div>
-            `;
+    const isLogin = authMode === 'login';
+    authContent.innerHTML = `
+        <div class="auth-title" style="text-align:center;font-size:24px;font-weight:700;margin-bottom:6px;">${isLogin ? '登录' : '注册'}账号</div>
+        <div class="auth-sub" style="text-align:center;color:#6b7280;font-size:14px;margin-bottom:20px;">${isLogin ? '欢迎回来！' : '加入趣社区，分享你的精彩'}</div>
+        <form id="authForm" style="width:100%;">
+            <div class="form-group" style="margin-bottom:14px;">
+                <label style="display:block;font-weight:500;font-size:14px;margin-bottom:4px;">用户名</label>
+                <input type="text" id="authUsername" placeholder="请输入用户名" required style="width:100%;padding:10px 14px;border:1px solid #e5e7eb;border-radius:10px;background:#F0F2F5;font-size:15px;box-sizing:border-box;" />
+            </div>
+            <div class="form-group" style="margin-bottom:14px;">
+                <label style="display:block;font-weight:500;font-size:14px;margin-bottom:4px;">密码</label>
+                <input type="password" id="authPassword" placeholder="请输入密码" required style="width:100%;padding:10px 14px;border:1px solid #e5e7eb;border-radius:10px;background:#F0F2F5;font-size:15px;box-sizing:border-box;" />
+            </div>
+            ${!isLogin ? `
+            <div class="form-group" style="margin-bottom:14px;">
+                <label style="display:block;font-weight:500;font-size:14px;margin-bottom:4px;">确认密码</label>
+                <input type="password" id="authPassword2" placeholder="请再次输入密码" required style="width:100%;padding:10px 14px;border:1px solid #e5e7eb;border-radius:10px;background:#F0F2F5;font-size:15px;box-sizing:border-box;" />
+            </div>
+            ` : ''}
+            <button type="submit" class="btn-auth" style="width:100%;padding:12px;background:linear-gradient(135deg,#4F7CFF,#6C5CE7);color:#fff;border-radius:30px;font-weight:600;font-size:16px;border:none;cursor:pointer;margin-top:6px;">${isLogin ? '登 录' : '注 册'}</button>
+        </form>
+        <div class="auth-switch" style="text-align:center;font-size:14px;color:#6b7280;margin-top:16px;">
+            ${isLogin ? '还没有账号？' : '已有账号？'}
+            <a id="authSwitch" style="color:#4F7CFF;font-weight:600;cursor:pointer;">${isLogin ? '去注册' : '去登录'}</a>
+        </div>
+    `;
 
-            const form = $('#authForm');
-            if (form) {
-                form.addEventListener('submit', handleAuthSubmit);
-            }
-            const switchLink = $('#authSwitch');
-            if (switchLink) {
-                switchLink.addEventListener('click', () => {
-                    authMode = authMode === 'login' ? 'register' : 'login';
-                    renderAuthForm();
-                });
-            }
-        }
-
+    const form = $('#authForm');
+    if (form) {
+        form.addEventListener('submit', handleAuthSubmit);
+    }
+    const switchLink = $('#authSwitch');
+    if (switchLink) {
+        switchLink.addEventListener('click', () => {
+            authMode = authMode === 'login' ? 'register' : 'login';
+            renderAuthForm();
+        });
+    }
+}
         function handleAuthSubmit(e) {
             e.preventDefault();
             const username = $('#authUsername').value.trim();
@@ -2096,13 +2171,31 @@
                     ${price > 0 ? `<span class="price-tag"><i class="fas fa-coins"></i> 付费 ¥${price.toFixed(2)}</span>` : ''}
                 </div>
                 <div class="comments-section">
-                    <div class="comment-title"><i class="far fa-comment-dots"></i> 评论 (${commentCount})</div>
-                    <div class="comment-input">
-                        <input type="text" id="commentInput" placeholder="写下你的评论..." />
-                        <button id="commentSubmit">发送</button>
-                    </div>
-                    <div id="commentList">${commentsHtml}</div>
-                </div>
+    <div class="comment-title"><i class="far fa-comment-dots"></i> 评论 (${commentCount})</div>
+    <div class="comment-input" style="display:flex;gap:10px;margin-bottom:16px;position:relative;">
+        <input type="text" id="commentInput" placeholder="写下你的评论..." style="flex:1;padding:10px 16px;border:1px solid #e5e7eb;border-radius:30px;background:#F0F2F5;font-size:14px;" />
+        <button class="emoji-btn" id="emojiToggle" title="选择表情" style="padding:10px 14px;background:#F0F2F5;border:1px solid #e5e7eb;border-radius:30px;color:#6b7280;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+            <i class="far fa-smile"></i>
+        </button>
+        <button id="commentSubmit" style="padding:10px 24px;background:#4F7CFF;color:#fff;border-radius:30px;font-weight:500;border:none;cursor:pointer;">发送</button>
+    </div>
+    <!-- Emoji 选择面板 -->
+    <div class="emoji-picker" id="emojiPicker" style="display:none;position:absolute;bottom:70px;left:0;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px;box-shadow:0 8px 30px rgba(0,0,0,0.15);z-index:100;grid-template-columns:repeat(6,1fr);gap:6px;max-width:280px;">
+        <button class="emoji-option" data-emoji="😊" style="padding:6px 8px;border-radius:8px;font-size:22px;background:transparent;border:none;cursor:pointer;">😊</button>
+        <button class="emoji-option" data-emoji="😂" style="padding:6px 8px;border-radius:8px;font-size:22px;background:transparent;border:none;cursor:pointer;">😂</button>
+        <button class="emoji-option" data-emoji="❤️" style="padding:6px 8px;border-radius:8px;font-size:22px;background:transparent;border:none;cursor:pointer;">❤️</button>
+        <button class="emoji-option" data-emoji="👍" style="padding:6px 8px;border-radius:8px;font-size:22px;background:transparent;border:none;cursor:pointer;">👍</button>
+        <button class="emoji-option" data-emoji="🔥" style="padding:6px 8px;border-radius:8px;font-size:22px;background:transparent;border:none;cursor:pointer;">🔥</button>
+        <button class="emoji-option" data-emoji="🎉" style="padding:6px 8px;border-radius:8px;font-size:22px;background:transparent;border:none;cursor:pointer;">🎉</button>
+        <button class="emoji-option" data-emoji="💡" style="padding:6px 8px;border-radius:8px;font-size:22px;background:transparent;border:none;cursor:pointer;">💡</button>
+        <button class="emoji-option" data-emoji="🙌" style="padding:6px 8px;border-radius:8px;font-size:22px;background:transparent;border:none;cursor:pointer;">🙌</button>
+        <button class="emoji-option" data-emoji="✨" style="padding:6px 8px;border-radius:8px;font-size:22px;background:transparent;border:none;cursor:pointer;">✨</button>
+        <button class="emoji-option" data-emoji="💪" style="padding:6px 8px;border-radius:8px;font-size:22px;background:transparent;border:none;cursor:pointer;">💪</button>
+        <button class="emoji-option" data-emoji="🤔" style="padding:6px 8px;border-radius:8px;font-size:22px;background:transparent;border:none;cursor:pointer;">🤔</button>
+        <button class="emoji-option" data-emoji="👏" style="padding:6px 8px;border-radius:8px;font-size:22px;background:transparent;border:none;cursor:pointer;">👏</button>
+    </div>
+    <div id="commentList">${commentsHtml}</div>
+</div>
             `;
 
             detailModal.classList.add('open');
@@ -2155,7 +2248,44 @@
                 });
             }
         }
-
+// ===== Emoji 选择器 =====
+const emojiToggle = detailContent.querySelector('#emojiToggle');
+const emojiPicker = detailContent.querySelector('#emojiPicker');
+if (emojiToggle && emojiPicker) {
+    emojiToggle.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (emojiPicker.style.display === 'grid') {
+            emojiPicker.style.display = 'none';
+        } else {
+            emojiPicker.style.display = 'grid';
+        }
+    });
+    
+    // 点击页面其他地方关闭
+    document.addEventListener('click', function() {
+        if (emojiPicker) {
+            emojiPicker.style.display = 'none';
+        }
+    });
+    
+    // 点击 Emoji 插入到输入框
+    emojiPicker.querySelectorAll('.emoji-option').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const emoji = this.dataset.emoji;
+            const input = detailContent.querySelector('#commentInput');
+            if (input) {
+                const start = input.selectionStart;
+                const end = input.selectionEnd;
+                const text = input.value;
+                input.value = text.substring(0, start) + emoji + text.substring(end);
+                input.focus();
+                input.selectionStart = input.selectionEnd = start + emoji.length;
+            }
+            emojiPicker.style.display = 'none';
+        });
+    });
+}
         detailClose.addEventListener('click', () => {
             detailModal.classList.remove('open');
             renderFeed();
