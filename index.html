@@ -1106,19 +1106,21 @@
         /* ===== Emoji 面板 ===== */
         .emoji-picker {
             display: none;
-            position: absolute;
-            bottom: 70px;
-            left: 0;
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 12px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-            z-index: 100;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 6px;
-            max-width: 280px;
-        }
+    position: absolute;
+    bottom: 70px;
+    left: 0;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    z-index: 100;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    min-width: 300px;
+    width: auto;
+    box-sizing: border-box;
+}
         .emoji-picker.open {
             display: grid !important;
         }
