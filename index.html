@@ -2791,9 +2791,7 @@ function renderProfile() {
         `<img src="${avatarUrl}" alt="头像" />` :
         `<div class="big-avatar">${user.username.charAt(0).toUpperCase()}</div>`;
 
-    // 余额
     const balance = user.balance || 0;
-    // 充值记录
     const records = user.rechargeRecords || [];
 
     const userPosts = data.posts.filter(p => p.authorId === user.id);
@@ -2802,10 +2800,52 @@ function renderProfile() {
         postsHtml = `<div class="profile-empty">你还没有发布过帖子</div>`;
     } else {
         userPosts.forEach(p => {
+            // 收集缩略图（图片 + 视频）
+            let thumbs = [];
+            if (p.images && p.images.length > 0) {
+                thumbs = thumbs.concat(p.images.slice(0, 3));
+            }
+            if (p.video && thumbs.length < 3) {
+                thumbs.push(p.video);
+            }
+            thumbs = thumbs.slice(0, 3);
+            const totalMedia = (p.images ? p.images.length : 0) + (p.video ? 1 : 0);
+            const moreCount = totalMedia > 3 ? totalMedia - 3 : 0;
+
+            let thumbHtml = '';
+            if (thumbs.length > 0) {
+                thumbHtml = `<div style="display:flex;gap:6px;flex-shrink:0;margin-left:12px;">`;
+                thumbs.forEach((src, idx) => {
+                    const isVideo = src === p.video && p.video;
+                    if (isVideo) {
+                        thumbHtml += `
+                            <div style="width:56px;height:56px;border-radius:8px;overflow:hidden;background:#1a1a2e;display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;">
+                                <video src="${src}" style="width:100%;height:100%;object-fit:cover;"></video>
+                                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;background:rgba(0,0,0,0.3);pointer-events:none;">
+                                    <i class="fas fa-play"></i>
+                                </div>
+                                ${idx === thumbs.length - 1 && moreCount > 0 ? `<div style="position:absolute;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;">+${moreCount}</div>` : ''}
+                            </div>
+                        `;
+                    } else {
+                        thumbHtml += `
+                            <div style="width:56px;height:56px;border-radius:8px;overflow:hidden;flex-shrink:0;position:relative;background:#f0f2f5;">
+                                <img src="${src}" style="width:100%;height:100%;object-fit:cover;" />
+                                ${idx === thumbs.length - 1 && moreCount > 0 ? `<div style="position:absolute;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;">+${moreCount}</div>` : ''}
+                            </div>
+                        `;
+                    }
+                });
+                thumbHtml += `</div>`;
+            }
+
             postsHtml += `
-                <div class="pp-item" data-id="${p.id}">
-                    <div class="pp-title-text">${escapeHtml(p.title)}</div>
-                    <div class="pp-meta">${formatTime(p.time)} · ${p.likes.length} 赞 · ${p.comments ? p.comments.length : 0} 评论 ${p.price > 0 ? '· ' + p.price + ' Q币' : ''}</div>
+                <div class="pp-item" data-id="${p.id}" style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:var(--transition);">
+                    <div style="flex:1;min-width:0;">
+                        <div class="pp-title-text" style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(p.title)}</div>
+                        <div class="pp-meta" style="font-size:13px;color:var(--text-secondary);">${formatTime(p.time)} · ${p.likes.length} 赞 · ${p.comments ? p.comments.length : 0} 评论 ${p.price > 0 ? '· ' + p.price + ' Q币' : ''}</div>
+                    </div>
+                    ${thumbHtml}
                 </div>
             `;
         });
@@ -2828,7 +2868,6 @@ function renderProfile() {
                     <i class="fas fa-camera"></i> 更换头像
                 </button>
             </div>
-            <!-- 余额区域：与头像同高，在右侧 -->
             <div class="balance-compact" style="display:flex;align-items:center;gap:12px;padding:8px 16px;background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:12px;border:1px solid #f59e0b;flex-shrink:0;height:72px;">
                 <i class="fas fa-coins" style="font-size:24px;color:#f59e0b;"></i>
                 <div>
@@ -2887,7 +2926,6 @@ function renderProfile() {
                 `;
             });
             html += `</div>`;
-            // 用一个临时弹窗显示
             const overlay = document.createElement('div');
             overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;';
             const box = document.createElement('div');
