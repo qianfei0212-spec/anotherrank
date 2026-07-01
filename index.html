@@ -1995,20 +1995,30 @@
 
         // 确认充值
         confirmRecharge.addEventListener('click', () => {
-            if (selectedRecharge <= 0) {
-                showToast('请选择充值金额', 'error');
-                return;
-            }
-            const user = getCurrentUser();
-            if (!user) { showToast('请先登录', 'error'); return; }
+    if (selectedRecharge <= 0) {
+        showToast('请选择充值金额', 'error');
+        return;
+    }
+    const user = getCurrentUser();
+    if (!user) { showToast('请先登录', 'error'); return; }
 
-            user.balance = (user.balance || 0) + selectedRecharge;
-            saveData();
-            closeRechargeModal();
-            renderProfile();
-            renderNav();
-            showToast(`充值成功！+${selectedRecharge} Q币 🎉`, 'success');
-        });
+    user.balance = (user.balance || 0) + selectedRecharge;
+    
+    // 记录充值明细
+    if (!user.rechargeRecords) user.rechargeRecords = [];
+    user.rechargeRecords.push({
+        type: 'recharge',
+        amount: selectedRecharge,
+        note: '充值Q币',
+        time: Date.now()
+    });
+    
+    saveData();
+    closeRechargeModal();
+    renderProfile();
+    renderNav();
+    showToast(`充值成功！+${selectedRecharge} Q币 🎉`, 'success');
+});
 
         // ================================================================
         // CHAMPIONS
@@ -2695,17 +2705,24 @@
                 pubContent.focus(); return; }
             if (price < 0) { showToast('金额不能为负数', 'error'); return; }
 
-            // 检查余额是否足够（如果设置了付费）
-            if (price > 0) {
-                const userBalance = user.balance || 0;
-                if (userBalance < price) {
-                    showToast(`余额不足！需要 ${price} Q币，当前余额 ${userBalance} Q币`, 'error');
-                    return;
-                }
-                // 扣除余额
-                user.balance = userBalance - price;
-                // 记录付费信息到帖子
-            }
+// 检查余额是否足够（如果设置了付费）
+if (price > 0) {
+    const userBalance = user.balance || 0;
+    if (userBalance < price) {
+        showToast(`余额不足！需要 ${price} Q币，当前余额 ${userBalance} Q币`, 'error');
+        return;
+    }
+    // 扣除余额
+    user.balance = userBalance - price;
+    // 记录消费明细
+    if (!user.rechargeRecords) user.rechargeRecords = [];
+    user.rechargeRecords.push({
+        type: 'spend',
+        amount: -price,
+        note: `发布付费帖子「${title}」`,
+        time: Date.now()
+    });
+}
 
             const newPost = {
                 id: data.nextPostId++,
@@ -2749,164 +2766,214 @@
             renderNav();
         });
 
-        // ================================================================
-        // PROFILE
-        // ================================================================
-        function renderProfile() {
-            const user = getCurrentUser();
+// ================================================================
+// PROFILE
+// ================================================================
+function renderProfile() {
+    const user = getCurrentUser();
 
-            if (!user) {
-                profileBox.innerHTML = `
-                    <div class="profile-empty">
-                        <i class="fas fa-user-circle" style="font-size:48px;color:var(--text-secondary);display:block;margin-bottom:12px;"></i>
-                        请先登录查看个人中心
-                        <br /><br />
-                        <button class="btn-login" style="background:var(--primary);color:#fff;padding:10px 32px;border-radius:30px;font-weight:500;border:none;cursor:pointer;" onclick="openAuthModal()">
-                            去登录
-                        </button>
+    if (!user) {
+        profileBox.innerHTML = `
+            <div class="profile-empty">
+                <i class="fas fa-user-circle" style="font-size:48px;color:var(--text-secondary);display:block;margin-bottom:12px;"></i>
+                请先登录查看个人中心
+                <br /><br />
+                <button class="btn-login" style="background:var(--primary);color:#fff;padding:10px 32px;border-radius:30px;font-weight:500;border:none;cursor:pointer;" onclick="openAuthModal()">
+                    去登录
+                </button>
+            </div>
+        `;
+        return;
+    }
+
+    const avatarUrl = user.avatar || '';
+    const avatarDisplay = avatarUrl ?
+        `<img src="${avatarUrl}" alt="头像" />` :
+        `<div class="big-avatar">${user.username.charAt(0).toUpperCase()}</div>`;
+
+    // 余额
+    const balance = user.balance || 0;
+    // 充值记录
+    const records = user.rechargeRecords || [];
+
+    const userPosts = data.posts.filter(p => p.authorId === user.id);
+    let postsHtml = '';
+    if (userPosts.length === 0) {
+        postsHtml = `<div class="profile-empty">你还没有发布过帖子</div>`;
+    } else {
+        userPosts.forEach(p => {
+            postsHtml += `
+                <div class="pp-item" data-id="${p.id}">
+                    <div class="pp-title-text">${escapeHtml(p.title)}</div>
+                    <div class="pp-meta">${formatTime(p.time)} · ${p.likes.length} 赞 · ${p.comments ? p.comments.length : 0} 评论 ${p.price > 0 ? '· ' + p.price + ' Q币' : ''}</div>
+                </div>
+            `;
+        });
+    }
+
+    profileBox.innerHTML = `
+        <div class="profile-head">
+            <div class="avatar-wrapper" id="avatarWrapper">
+                ${avatarDisplay}
+                <div class="avatar-overlay" id="avatarOverlay">
+                    <i class="fas fa-camera"></i>
+                    <span>更换头像</span>
+                </div>
+                <input type="file" id="avatarInput" accept="image/*" style="display:none;" />
+            </div>
+            <div class="p-info" style="flex:1;">
+                <div class="p-name">${user.username}</div>
+                <div class="p-joined">加入于 ${formatTime(user.joined)}</div>
+                <button class="btn-change-avatar" id="changeAvatarBtn">
+                    <i class="fas fa-camera"></i> 更换头像
+                </button>
+            </div>
+            <!-- 余额区域：与头像同高，在右侧 -->
+            <div class="balance-compact" style="display:flex;align-items:center;gap:12px;padding:8px 16px;background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:12px;border:1px solid #f59e0b;flex-shrink:0;height:72px;">
+                <i class="fas fa-coins" style="font-size:24px;color:#f59e0b;"></i>
+                <div>
+                    <div style="font-size:12px;color:#92400e;font-weight:500;">Q币余额</div>
+                    <div style="font-size:24px;font-weight:700;color:#92400e;">${balance}</div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:4px;margin-left:4px;">
+                    <button class="btn-recharge" id="btnRecharge" style="padding:4px 14px;background:#f59e0b;color:#fff;border-radius:20px;font-size:13px;font-weight:600;border:none;cursor:pointer;white-space:nowrap;">
+                        <i class="fas fa-plus-circle"></i> 充值
+                    </button>
+                    <button class="btn-detail" id="btnDetail" style="padding:2px 10px;background:transparent;color:#92400e;font-size:12px;border:none;cursor:pointer;text-decoration:underline;">
+                        明细 ›
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="profile-posts">
+            <div class="pp-title">我的帖子 (${userPosts.length})</div>
+            ${postsHtml}
+        </div>
+    `;
+
+    // ===== 充值按钮 =====
+    const btnRecharge = document.getElementById('btnRecharge');
+    if (btnRecharge) {
+        btnRecharge.addEventListener('click', openRechargeModal);
+    }
+
+    // ===== 明细按钮 =====
+    const btnDetail = document.getElementById('btnDetail');
+    if (btnDetail) {
+        btnDetail.addEventListener('click', () => {
+            const user = getCurrentUser();
+            if (!user) return;
+            const records = user.rechargeRecords || [];
+            if (records.length === 0) {
+                showToast('暂无充值记录', 'info');
+                return;
+            }
+            let html = `<div style="max-height:400px;overflow-y:auto;">`;
+            html += `<div style="font-size:18px;font-weight:700;margin-bottom:12px;text-align:center;">📋 充值明细</div>`;
+            records.slice().reverse().forEach(r => {
+                const typeLabel = r.type === 'recharge' ? '💰 充值' : '📤 消费';
+                const color = r.type === 'recharge' ? '#065f46' : '#dc2626';
+                html += `
+                    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e5e7eb;font-size:14px;">
+                        <div>
+                            <span style="font-weight:600;">${typeLabel}</span>
+                            <span style="color:#6b7280;font-size:12px;margin-left:8px;">${r.note || ''}</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <span style="color:${color};font-weight:600;">${r.amount > 0 ? '+' : ''}${r.amount} Q币</span>
+                            <span style="color:#6b7280;font-size:12px;">${formatTime(r.time)}</span>
+                        </div>
                     </div>
                 `;
+            });
+            html += `</div>`;
+            // 用一个临时弹窗显示
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;';
+            const box = document.createElement('div');
+            box.style.cssText = 'background:#fff;border-radius:16px;max-width:500px;width:100%;max-height:80vh;padding:28px 32px;position:relative;overflow-y:auto;';
+            box.innerHTML = `
+                <button onclick="this.closest('div[style]').remove()" style="position:sticky;top:0;float:right;font-size:24px;color:#6b7280;background:none;border:none;cursor:pointer;">×</button>
+                ${html}
+            `;
+            overlay.appendChild(box);
+            document.body.appendChild(overlay);
+            overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+        });
+    }
+
+    // ===== 头像事件 =====
+    const avatarWrapper = document.getElementById('avatarWrapper');
+    const avatarOverlay = document.getElementById('avatarOverlay');
+    const changeAvatarBtn = document.getElementById('changeAvatarBtn');
+    const avatarInput = document.getElementById('avatarInput');
+
+    if (avatarOverlay) {
+        avatarOverlay.style.display = 'none';
+    }
+
+    if (avatarWrapper && avatarInput) {
+        avatarWrapper.addEventListener('click', function(e) {
+            if (e.target.closest('.btn-change-avatar')) return;
+            avatarInput.click();
+        });
+    }
+
+    if (changeAvatarBtn && avatarInput) {
+        changeAvatarBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            avatarInput.click();
+        });
+    }
+
+    if (avatarInput) {
+        avatarInput.addEventListener('change', function(e) {
+            const file = this.files[0];
+            if (!file) return;
+
+            if (file.size > 2 * 1024 * 1024) {
+                showToast('图片大小不能超过 2MB', 'error');
+                this.value = '';
                 return;
             }
 
-            const avatarUrl = user.avatar || '';
-            const avatarDisplay = avatarUrl ?
-                `<img src="${avatarUrl}" alt="头像" />` :
-                `<div class="big-avatar">${user.username.charAt(0).toUpperCase()}</div>`;
-
-            // 余额显示
-            const balance = user.balance || 0;
-
-            const userPosts = data.posts.filter(p => p.authorId === user.id);
-            let postsHtml = '';
-            if (userPosts.length === 0) {
-                postsHtml = `<div class="profile-empty">你还没有发布过帖子</div>`;
-            } else {
-                userPosts.forEach(p => {
-                    postsHtml += `
-                        <div class="pp-item" data-id="${p.id}">
-                            <div class="pp-title-text">${escapeHtml(p.title)}</div>
-                            <div class="pp-meta">${formatTime(p.time)} · ${p.likes.length} 赞 · ${p.comments ? p.comments.length : 0} 评论 ${p.price > 0 ? '· ' + p.price + ' Q币' : ''}</div>
-                        </div>
-                    `;
-                });
+            if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
+                showToast('仅支持 JPG、PNG、GIF、WEBP 格式', 'error');
+                this.value = '';
+                return;
             }
 
-            profileBox.innerHTML = `
-                <div class="profile-head">
-                    <div class="avatar-wrapper" id="avatarWrapper">
-                        ${avatarDisplay}
-                        <div class="avatar-overlay" id="avatarOverlay">
-                            <i class="fas fa-camera"></i>
-                            <span>更换头像</span>
-                        </div>
-                        <input type="file" id="avatarInput" accept="image/*" style="display:none;" />
-                    </div>
-                    <div class="p-info">
-                        <div class="p-name">${user.username}</div>
-                        <div class="p-joined">加入于 ${formatTime(user.joined)}</div>
-                        <button class="btn-change-avatar" id="changeAvatarBtn">
-                            <i class="fas fa-camera"></i> 更换头像
-                        </button>
-                    </div>
-                </div>
-                <!-- ===== 余额和充值区域 ===== -->
-                <div class="balance-section">
-                    <div class="balance-info">
-                        <span class="coin-icon"><i class="fas fa-coins"></i></span>
-                        <div>
-                            <div class="balance-label">Q币余额</div>
-                            <div class="balance-amount">${balance}</div>
-                        </div>
-                    </div>
-                    <button class="btn-recharge" id="btnRecharge">
-                        <i class="fas fa-plus-circle"></i> 充值
-                    </button>
-                </div>
-                <div class="profile-posts">
-                    <div class="pp-title">我的帖子 (${userPosts.length})</div>
-                    ${postsHtml}
-                </div>
-            `;
-
-            // ===== 充值按钮事件 =====
-            const btnRecharge = document.getElementById('btnRecharge');
-            if (btnRecharge) {
-                btnRecharge.addEventListener('click', openRechargeModal);
-            }
-
-            // ===== 头像事件 =====
-            const avatarWrapper = document.getElementById('avatarWrapper');
-            const avatarOverlay = document.getElementById('avatarOverlay');
-            const changeAvatarBtn = document.getElementById('changeAvatarBtn');
-            const avatarInput = document.getElementById('avatarInput');
-
-            if (avatarOverlay) {
-                avatarOverlay.style.display = 'none';
-            }
-
-            if (avatarWrapper && avatarInput) {
-                avatarWrapper.addEventListener('click', function(e) {
-                    if (e.target.closest('.btn-change-avatar')) return;
-                    avatarInput.click();
-                });
-            }
-
-            if (changeAvatarBtn && avatarInput) {
-                changeAvatarBtn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    avatarInput.click();
-                });
-            }
-
-            if (avatarInput) {
-                avatarInput.addEventListener('change', function(e) {
-                    const file = this.files[0];
-                    if (!file) return;
-
-                    if (file.size > 2 * 1024 * 1024) {
-                        showToast('图片大小不能超过 2MB', 'error');
-                        this.value = '';
-                        return;
-                    }
-
-                    if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
-                        showToast('仅支持 JPG、PNG、GIF、WEBP 格式', 'error');
-                        this.value = '';
-                        return;
-                    }
-
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const currentUser = getCurrentUser();
-                        if (currentUser) {
-                            currentUser.avatar = e.target.result;
-                            data.posts.forEach(p => {
-                                if (p.authorId === currentUser.id) {
-                                    p.authorAvatar = e.target.result;
-                                }
-                            });
-                            saveData();
-                            renderProfile();
-                            renderNav();
-                            renderFeed();
-                            showToast('头像更新成功！ 🎉', 'success');
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const currentUser = getCurrentUser();
+                if (currentUser) {
+                    currentUser.avatar = e.target.result;
+                    data.posts.forEach(p => {
+                        if (p.authorId === currentUser.id) {
+                            p.authorAvatar = e.target.result;
                         }
-                    };
-                    reader.onerror = function() {
-                        showToast('读取图片失败，请重试', 'error');
-                    };
-                    reader.readAsDataURL(file);
-                });
-            }
+                    });
+                    saveData();
+                    renderProfile();
+                    renderNav();
+                    renderFeed();
+                    showToast('头像更新成功！ 🎉', 'success');
+                }
+            };
+            reader.onerror = function() {
+                showToast('读取图片失败，请重试', 'error');
+            };
+            reader.readAsDataURL(file);
+        });
+    }
 
-            $$('.pp-item').forEach(item => {
-                item.addEventListener('click', function() {
-                    const id = parseInt(this.dataset.id, 10);
-                    if (id) openDetail(id);
-                });
-            });
-        }
+    $$('.pp-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const id = parseInt(this.dataset.id, 10);
+            if (id) openDetail(id);
+        });
+    });
+}
 
         // ================================================================
         // UTILITY
